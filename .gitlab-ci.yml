@@ -1,0 +1,45 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: none
+  CI_DISPOSABLE_ENVIRONMENT: "true"
+
+image: docker:18.09.2
+stages:
+  - build_push
+
+before_script:
+  - echo $DOCKERHUB_PW | docker login -u $DOCKERHUB_USER --password-stdin
+
+build_bitcoind:
+  stage: build_push
+  only:
+    - /^bitcoind_v.*/
+  script:
+    - cd bitcoind && ./build-and-push-to-dockerhub.sh
+
+build_lightningd:
+  stage: build_push
+  only:
+    - /^lightningd_v.*/
+  script:
+    - cd lightningd && ./build-and-push-to-dockerhub.sh
+
+build_charged:
+  stage: build_push
+  only:
+    - /^charged_v.*/
+  script:
+    - cd charged && ./build-and-push-to-dockerhub.sh
+
+build_tor:
+  stage: build_push
+  only:
+    - /^tor_v.*/
+  script:
+    - cd tor && ./build-and-push-to-dockerhub.sh
+
+build_gcloud_docker:
+  stage: build_push
+  only:
+    - /^gcloud_docker_v.*/
+  script:
+    - cd gcloud-docker-tf && ./build-and-push-to-dockerhub.sh
