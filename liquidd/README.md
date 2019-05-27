@@ -4,6 +4,7 @@ Running `liquidd` requires running [bitcoind](../bitcoind) as well.
 Liquid's options are available by running `liquidd --help`.
 
 ### How to run
+```
 /etc/systemd/system/liquid.service
 [Unit]
 Description=Liquidd pseudo node
@@ -24,3 +25,4 @@ ExecStart=/usr/bin/docker run \
 ExecStop=/usr/bin/docker exec liquid liquid-cli stop
 ExecStopPost=/usr/bin/sleep 3
 ExecStopPost=/usr/bin/docker rm -f liquid
+```
