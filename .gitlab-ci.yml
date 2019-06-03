@@ -42,4 +42,11 @@ build_gcloud_docker:
   only:
     - /^gcloud_docker_v.*/
   script:
-    - cd gcloud-docker-tf && ./build-and-push-to-dockerhub.sh
+    - cd misc/gcloud-docker-tf && ./build-and-push-to-dockerhub.sh
+    
+build_certbot_gcs:
+  stage: build_push
+  only:
+    - /^certbot_gcs_v.*/
+  script:
+    - cd misc/certbot-gcs && ./build-and-push-to-dockerhub.sh
