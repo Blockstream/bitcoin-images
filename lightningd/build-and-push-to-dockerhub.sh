@@ -1,9 +1,12 @@
 #!/bin/sh
 
-docker pull blockstream/lightningd:latest
-docker build --cache-from blockstream/lightningd:latest -t blockstream/lightningd:v0.7.0 . || `echo -e "\nSomething broke" && exit 1`
-docker push blockstream/lightningd:v0.7.0
+export VER=v0.7.1
 
-SHA=$(docker inspect --format='{{index .RepoDigests 0}}' blockstream/lightningd:v0.7.0)
+docker pull blockstream/lightningd:latest
+docker build --cache-from blockstream/lightningd:latest -t blockstream/lightningd:${VER} -t blockstream/lightningd:latest . || `echo -e "\nSomething broke" && exit 1`
+docker push blockstream/lightningd:latest
+docker push blockstream/lightningd:${VER}
+
+SHA=$(docker inspect --format='{{index .RepoDigests 0}}' blockstream/lightningd:latest)
 
 echo -e "The new image is:\n${SHA}"

@@ -15,7 +15,8 @@ build_bitcoind_gitian:
   stage: build_gitian
   only:
     - /^bitcoind_gitian_v.*/
-
+  before_script:
+    - echo "No need to docker login"
   script:
     - export BITCOIN_VERSION=$BITCOIN_VERSION
     - export BITCOIN_DIR=$BITCOIN_DIR
@@ -28,30 +29,17 @@ build_bitcoind_gitian:
     - sed -i 's#CONFIGFLAGS=.*#CONFIGFLAGS="--without-gui --enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"#' /builds/devops/bitcoin-images/bitcoin-git/contrib/gitian-descriptors/gitian-linux.yml
     - sed -i 's#.*QT_RCC.*##g' /builds/devops/bitcoin-images/bitcoin-git/contrib/gitian-descriptors/gitian-linux.yml
     - sed -i '0,/MAKEOPTS=(/{s/MAKEOPTS=(*/&NO_QT=1 /}' /builds/devops/bitcoin-images/gitian-git/bin/gbuild
-    - (cd gitian-git && bin/gbuild --num-make 2 --memory 8000 --url bitcoin=/builds/devops/bitcoin-images/bitcoin-git --commit bitcoin=${BITCOIN_VERSION} /builds/devops/bitcoin-images/bitcoin-git/contrib/gitian-descriptors/gitian-linux.yml)
+    - (cd gitian-git && bin/gbuild --num-make 8 --memory 8000 --url bitcoin=/builds/devops/bitcoin-images/bitcoin-git --commit bitcoin=${BITCOIN_VERSION} /builds/devops/bitcoin-images/bitcoin-git/contrib/gitian-descriptors/gitian-linux.yml)
     - (cd gitian-git && tar -xzvf build/out/bitcoin-${BITCOIN_DIR}-x86_64-linux-gnu.tar.gz)
-
-  artifacts:
-    name: "bitcoin-images-${CI_BUILD_REF_NAME}_${CI_BUILD_REF}"
-    paths:
-      - gitian-git/bitcoin-${BITCOIN_DIR}
-    expire_in: 1 week
-
-build_bitcoind:
-  dependencies:
-    - build_bitcoind_gitian
-  stage: build_push
-  only:
-    - /^bitcoind_gitian_v.*/
-  script:
-    - export BITCOIN_DIR=$BITCOIN_DIR
     - ls -al /builds/devops/bitcoin-images/gitian-git/bitcoin-${BITCOIN_DIR}/bin/
-    - mkdir -p bitcoind/bin
-    - cp -rf /builds/devops/bitcoin-images/gitian-git/bitcoin-${BITCOIN_DIR}/bin/* bitcoind/bin
-    - ls -al bitcoind/bin
+    - mkdir -p bitcoind/bitcoin
+    - cp -rf /builds/devops/bitcoin-images/gitian-git/bitcoin-${BITCOIN_DIR}/bin/* bitcoind/bitcoin
+    - ls -al bitcoind/bitcoin
     - docker pull blockstream/bitcoind:latest
-    - (cd bitcoind && docker build --cache-from blockstream/bitcoind:latest -t blockstream/bitcoind:latest -f Dockerfile.gitian .)
+    - (cd bitcoind && docker build --cache-from blockstream/bitcoind:latest -t blockstream/bitcoind:latest -t blockstream/bitcoind:${BITCOIN_VERSION} -f Dockerfile.gitian .)
     - docker push blockstream/bitcoind:latest
+    - docker push blockstream/bitcoind:${BITCOIN_VERSION}
+    - sleep 3600
 
 build_bitcoind:
   stage: build_push

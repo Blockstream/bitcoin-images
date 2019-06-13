@@ -1,4 +1,4 @@
-FROM alpine@sha256:28ef97b8686a0b5399129e9b763d5b7e5ff03576aa5580d6f4182a49c5fe1913 AS builder
+FROM alpine@sha256:769fddc7cc2f0a1c35abb2f91432e8beecf83916c421420e6a6da9f8975464b6 AS builder
 
 RUN apk add --no-cache ca-certificates autoconf automake \
   build-base libressl libtool gmp-dev  python python-dev \
@@ -19,14 +19,14 @@ RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${BITCOIN_PGP_KEY} \
 RUN tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz
 
 # Build lightningd
-ENV LIGHTNINGD_VERSION=v0.7.0
+ENV LIGHTNINGD_VERSION=v0.7.1
 RUN git clone https://github.com/ElementsProject/lightning.git /opt/lightningd && \
   cd /opt/lightningd && \
   git checkout ${LIGHTNINGD_VERSION} && \
   ./configure && \
   make && make install
 
-FROM alpine@sha256:28ef97b8686a0b5399129e9b763d5b7e5ff03576aa5580d6f4182a49c5fe1913
+FROM alpine@sha256:769fddc7cc2f0a1c35abb2f91432e8beecf83916c421420e6a6da9f8975464b6
 
 ARG BITCOIN_DIR_VERSION=0.18.0
 

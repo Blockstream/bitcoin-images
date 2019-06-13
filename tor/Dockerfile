@@ -1,4 +1,4 @@
-FROM alpine@sha256:28ef97b8686a0b5399129e9b763d5b7e5ff03576aa5580d6f4182a49c5fe1913 AS builder
+FROM alpine@sha256:769fddc7cc2f0a1c35abb2f91432e8beecf83916c421420e6a6da9f8975464b6 AS builder
 
 ARG TOR_VER=0.3.5.8
 ARG TORGZ=https://dist.torproject.org/tor-$TOR_VER.tar.gz
@@ -14,7 +14,7 @@ RUN gpg --keyserver pool.sks-keyservers.net --recv-keys 0x6AFEE6D49E92B601 \
   && tar xfz tor-$TOR_VER.tar.gz && cd tor-$TOR_VER \
   && ./configure && make install
 
-FROM alpine@sha256:28ef97b8686a0b5399129e9b763d5b7e5ff03576aa5580d6f4182a49c5fe1913
+FROM alpine@sha256:769fddc7cc2f0a1c35abb2f91432e8beecf83916c421420e6a6da9f8975464b6
 
 RUN apk --no-cache add --update \
   bash alpine-sdk gnupg libevent libevent-dev zlib zlib-dev openssl openssl-dev
