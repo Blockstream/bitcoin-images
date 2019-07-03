@@ -15,8 +15,6 @@ build_bitcoind_gitian:
   stage: build_gitian
   only:
     - /^bitcoind_gitian_v.*/
-  before_script:
-    - echo "No need to docker login"
   script:
     - export BITCOIN_VERSION=$BITCOIN_VERSION
     - export BITCOIN_DIR=$BITCOIN_DIR
