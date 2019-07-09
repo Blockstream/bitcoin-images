@@ -1,9 +1,9 @@
 FROM hashicorp/terraform:light AS terraform
-FROM docker@sha256:453c52a7a7200677f9effa3acc8498a2f71af77c2951ac5e1ac1391053573374
+FROM docker@sha256:38874a2f8d1c33b51b7e2c629630f54ec32f1fe4aed91133db9da771029e2947
 
 COPY --from=terraform /bin/terraform /bin/terraform
 
-ENV CLOUD_SDK_VERSION="245.0.0"
+ENV CLOUD_SDK_VERSION="250.0.0"
 ENV PATH=/opt/google-cloud-sdk/bin:$PATH
 
 WORKDIR /opt
