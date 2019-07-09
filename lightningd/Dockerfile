@@ -20,18 +20,21 @@ RUN tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz
 
 # Build lightningd
 ENV LIGHTNINGD_VERSION=v0.7.1
-RUN git clone https://github.com/ElementsProject/lightning.git /opt/lightningd && \
+RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd && \
   cd /opt/lightningd && \
-  git checkout ${LIGHTNINGD_VERSION} && \
   ./configure && \
   make && make install
+
+# Add custom plugins
+RUN wget -q -O /opt/lightningd/plugins/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
+  && chmod a+x /opt/lightningd/plugins/prometheus.py
 
 FROM alpine@sha256:769fddc7cc2f0a1c35abb2f91432e8beecf83916c421420e6a6da9f8975464b6
 
 ARG BITCOIN_DIR_VERSION=0.18.0
 
 RUN apk add --no-cache gmp-dev sqlite-dev inotify-tools socat bash \
-  zlib-dev wget ca-certificates gnupg
+  zlib-dev wget ca-certificates gnupg python3
 
 # Add GNU Lib C
 ENV GLIBC_VERSION=2.28-r0
@@ -42,7 +45,8 @@ RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/s
 RUN apk update \
   && apk --no-cache add glibc-${GLIBC_VERSION}.apk \
  	&& apk --no-cache add glibc-bin-${GLIBC_VERSION}.apk \
-  && rm -f glibc-*
+  && rm -f glibc-* \
+  && pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/requirements.txt
 
 COPY --from=builder /opt/lightningd/cli/lightning-cli /usr/local/bin
 COPY --from=builder /opt/lightningd/lightningd/lightning* /usr/local/bin/
