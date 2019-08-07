@@ -2,8 +2,8 @@
 
 set -v
 
-BITCOIN_VERSION=v0.18.0
-BITCOIN_DIR=0.18.0
+BITCOIN_VERSION=v0.18.1
+BITCOIN_DIR=0.18.1
 export USE_DOCKER=1
 
 git clone https://github.com/devrandom/gitian-builder.git gitian

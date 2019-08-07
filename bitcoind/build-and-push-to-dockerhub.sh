@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export VER=v0.18.0
+export VER=v0.18.1
 
 docker pull blockstream/bitcoind:latest
 docker build --cache-from blockstream/bitcoind:latest -t blockstream/bitcoind:${VER} . || `echo -e "\nSomething broke" && exit 1`
