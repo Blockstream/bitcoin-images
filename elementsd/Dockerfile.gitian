@@ -13,7 +13,8 @@ RUN apk update && \
 	apk --no-cache add glibc-bin-${GLIBC_VERSION}.apk && \
   rm -f glibc-*
 
-COPY ./bitcoin/bin /usr/local/bin/
-COPY ./bitcoin/include /usr/local/include/
-COPY ./bitcoin/lib /usr/local/lib/
-COPY ./bitcoin/share /usr/local/share/
+COPY ./elements/bin /usr/local/bin/
+COPY ./elements/include /usr/local/include/
+COPY ./elements/lib /usr/local/lib/
+COPY ./elements/share /usr/local/share/
+

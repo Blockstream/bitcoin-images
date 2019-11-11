@@ -8,6 +8,7 @@ export USE_DOCKER=1
 
 git clone https://github.com/devrandom/gitian-builder.git gitian
 git clone https://github.com/bitcoin/bitcoin -b ${BITCOIN_VERSION} gitian/inputs/bitcoin
+sed -i '/50cacher$/d' gitian/bin/make-base-vm # don't use apt cache
 cd gitian && bin/make-base-vm --docker --suite bionic
 
 sed -i 's#HOSTS=.*#HOSTS="x86_64-linux-gnu"#' inputs/bitcoin/contrib/gitian-descriptors/gitian-linux.yml
