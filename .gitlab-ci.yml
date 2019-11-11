@@ -1,6 +1,12 @@
 variables:
   GIT_SUBMODULE_STRATEGY: none
   CI_DISPOSABLE_ENVIRONMENT: "true"
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: tcp://localhost:2375
+  DOCKER_TLS_CERTDIR: ""
+
+services:
+  - docker:19-dind
 
 image: docker:18.09.2
 stages:
@@ -41,6 +47,9 @@ build_bitcoind_gitian:
 
 build_bitcoind:
   stage: build_push
+  tags:
+    - docker
+    - k8s
   only:
     - /^bitcoind_v.*/
   script:
@@ -48,6 +57,9 @@ build_bitcoind:
 
 build_lightningd:
   stage: build_push
+  tags:
+    - docker
+    - k8s
   only:
     - /^lightningd_v.*/
   script:
@@ -55,6 +67,9 @@ build_lightningd:
 
 build_charged:
   stage: build_push
+  tags:
+    - docker
+    - k8s
   only:
     - /^charged_v.*/
   script:
@@ -62,6 +77,9 @@ build_charged:
 
 build_tor:
   stage: build_push
+  tags:
+    - docker
+    - k8s
   only:
     - /^tor_v.*/
   script:
@@ -69,13 +87,19 @@ build_tor:
 
 build_gcloud_docker:
   stage: build_push
+  tags:
+    - docker
+    - k8s
   only:
     - /^gcloud_docker_v.*/
   script:
     - cd misc/gcloud-docker-tf && ./build-and-push-to-dockerhub.sh
-    
+
 build_certbot_gcs:
   stage: build_push
+  tags:
+    - docker
+    - k8s
   only:
     - /^certbot_gcs_v.*/
   script:
