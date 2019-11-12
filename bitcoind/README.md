@@ -1,8 +1,6 @@
 ## Bitcoind
 `Dockerfile` downloads the compiled binaries from https://bitcoincore.org. The file was adapted from https://github.com/jamesob/docker-bitcoind. Whereas `Dockerfile.gitian` uses [gitian](https://github.com/devrandom/gitian-builder) to build from [source](https://github.com/bitcoin/bitcoin).
 
-Feel free to adapt `build-and-push-to-dockerhub.sh` to push to your own repo/registry.
-
 You can update Bitcoin's version in the `Dockerfile` or `run-gitian.sh` based on the kind of image you want to build (e.g. `v0.17.1` or `commit_hash`).
 
 ### Building from source
@@ -26,11 +24,11 @@ cd /opt/bitcoind
 You can watch the install or build logs by running `docker exec ub tail -f /opt/bitcoind/gitian/var/install|build.log` in another terminal window.
 After gitian has finished successfully, you can `Ctrl+D` out of the container and remove it `docker rm -f ub`.
 
-Lastly, you can build the actual Docker image with the Bitcoin binaries by
+Lastly, you can build the Docker image(s) with the Bitcoin binaries by specifying the appropriate Dockerfile:
 ```
-docker build -t blockstream/bitcoind:latest -f Dockerfile.gitian .
+docker build -t blockstream/bitcoind:tag_or_commit -f Dockerfile.gitian .
 ``` 
-And possibly adapt `build-and-push-to-dockerhub.sh` to build from source as well. 
+Or feel free to adapt `build-and-push-to-dockerhub.sh` to build/push to your own repo/registry.
 
 ### How to run
 ```
