@@ -40,7 +40,7 @@ build_bitcoind_gitian:
     - cp -rf /builds/devops/bitcoin-images/gitian-git/bitcoin-${BITCOIN_DIR}/bin/* bitcoind/bitcoin
     - ls -al bitcoind/bitcoin
     - docker pull blockstream/bitcoind:latest
-    - (cd bitcoind && docker build --cache-from blockstream/bitcoind:latest -t blockstream/bitcoind:latest -t blockstream/bitcoind:${BITCOIN_VERSION} -f Dockerfile.gitian .)
+    - (cd bitcoind && docker build --network=host --cache-from blockstream/bitcoind:latest -t blockstream/bitcoind:latest -t blockstream/bitcoind:${BITCOIN_VERSION} -f Dockerfile.gitian .)
     - docker push blockstream/bitcoind:latest
     - docker push blockstream/bitcoind:${BITCOIN_VERSION}
     - sleep 3600
