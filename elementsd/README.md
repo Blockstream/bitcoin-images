@@ -1,7 +1,8 @@
 ## Elementsd
-`Dockerfile` downloads the compiled binaries from https://github.com/ElementsProject/elements/releases. The file was adapted from https://github.com/jamesob/docker-bitcoind. Whereas `Dockerfile.gitian` uses [gitian](https://github.com/devrandom/gitian-builder) to build from [source](https://github.com/ElementsProject/elements).
+* `Dockerfile` downloads the compiled binaries from https://github.com/ElementsProject/elements/releases
+* Whereas `Dockerfile.gitian` uses [gitian](https://github.com/devrandom/gitian-builder) to build from [source](https://github.com/ElementsProject/elements)
 
-You can update Elements' version in the `Dockerfile` and/or `run-gitian.sh` based on the kind of image you want to build (e.g. `v0.17.1` or `commit_hash`).
+You can update Elements' version in the `Dockerfile` and/or `run-gitian.sh` based on the version you want to build (e.g. `v0.18.1` or `commit_hash`).
 
 ### Building from source
 If you're on MAC (or Windows), run inside an Ubuntu container (you need [Docker](https://docs.docker.com/install/#supported-platforms)). Assuming you've `git cloned && cd bitcoin-images`:
