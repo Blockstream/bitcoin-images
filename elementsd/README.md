@@ -30,27 +30,3 @@ Lastly, you can build the Docker image(s) with the Elements binaries by specifyi
 docker build -t blockstream/elementsd:tag_or_commit -f Dockerfile.gitian .
 ``` 
 Or feel free to adapt `build-and-push-to-dockerhub.sh` to build/push to your own repo/registry.
-
-### How to run
-```
-/etc/systemd/system/elements.service
-[Unit]
-Description=elementsd pseudo node
-Wants=docker.target
-After=docker.service
-
-[Service]
-Restart=always
-RestartSec=3
-ExecStartPre=/usr/bin/docker pull blockstream/elementsd:latest
-ExecStart=/usr/bin/docker run \
-    --network=host \
-    --pid=host \
-    --name=elements \
-    -v /mnt/data/elements/elements.conf:/root/.elements/elements.conf:ro \
-    -v /mnt/data/elements:/root/.elements:rw \
-    blockstream/elementsd:latest elementsd -printtoconsole
-ExecStop=/usr/bin/docker exec elements elements-cli stop
-ExecStopPost=/usr/bin/sleep 3
-ExecStopPost=/usr/bin/docker rm -f elements
-```
