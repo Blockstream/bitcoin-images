@@ -2,8 +2,8 @@
 
 set -v
 
-ELEMENTS_VERSION=elements-0.18.1.3_rc1
-ELEMENTS_DIR=0.18.1.3
+ELEMENTS_VERSION=elements-0.18.1.4
+ELEMENTS_DIR=0.18.1.4
 export USE_DOCKER=1
 
 git clone https://github.com/devrandom/gitian-builder.git gitian
