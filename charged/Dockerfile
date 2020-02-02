@@ -4,12 +4,11 @@ ENV CHARGED_VERSION=master
 
 WORKDIR /opt/charged
 
-RUN apt-get update && apt-get install -y --no-install-recommends git
+RUN apt-get update && apt-get install -y git
 
 # Build charged
-RUN git clone https://github.com/ElementsProject/lightning-charge.git /opt/charged \
-  && git checkout ${CHARGED_VERSION} \
-  && npm install --production \
+RUN git clone https://github.com/ElementsProject/lightning-charge.git -b ${CHARGED_VERSION} /opt/charged \
+  && npm install \
   && npm run dist \
   && rm -rf src test
 
