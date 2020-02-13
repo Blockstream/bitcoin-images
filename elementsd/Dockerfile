@@ -16,12 +16,11 @@ RUN apk update \
   && apk --no-cache add glibc-bin-${GLIBC_VERSION}.apk
 
 RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz \
- && wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/SHA256SUMS.sig \
- && wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/SHA256SUMS
+ && wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
 
 RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${ELEMENTS_PGP_KEY} \
-  && gpg --verify SHA256SUMS.sig SHA256SUMS \
-  && grep elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS | sha256sum -c \
+  && gpg --verify SHA256SUMS.asc \
+  && grep elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS.asc | sha256sum -c \
   && mkdir elements \
   && tar xzvf elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C elements \
   && mkdir /root/.elements \
