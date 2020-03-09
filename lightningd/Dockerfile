@@ -5,11 +5,8 @@ ENV BITCOIN_VERSION=0.19.0.1
 ENV BITCOIN_PGP_KEY=01EA5486DE18A882D4C2684590C8019E36C2E964
 
 WORKDIR /opt/bitcoin
-#RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz \
-#  && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc
-
-COPY SHA256SUMS.asc /opt/bitcoin
-COPY bitcoin-* /opt/bitcoin
+RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz \
+  && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc
 
 RUN apk add --no-cache ca-certificates autoconf automake \
   build-base libressl libtool gmp-dev  python python-dev \
@@ -22,7 +19,7 @@ RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${BITCOIN_PGP_KEY} \
 RUN tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
 
 # Build lightningd
-ENV LIGHTNINGD_VERSION=v0.8.0
+ENV LIGHTNINGD_VERSION=v0.8.1
 RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd \
   && cd /opt/lightningd \
   && ./configure \
