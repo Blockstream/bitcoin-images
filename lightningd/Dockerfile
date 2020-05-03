@@ -1,7 +1,7 @@
 FROM alpine@sha256:769fddc7cc2f0a1c35abb2f91432e8beecf83916c421420e6a6da9f8975464b6 AS builder
 
 # Download bitcoin binaries
-ENV BITCOIN_VERSION=0.19.0.1
+ENV BITCOIN_VERSION=0.19.1
 ENV BITCOIN_PGP_KEY=01EA5486DE18A882D4C2684590C8019E36C2E964
 
 WORKDIR /opt/bitcoin
@@ -19,7 +19,7 @@ RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${BITCOIN_PGP_KEY} \
 RUN tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
 
 # Build lightningd
-ENV LIGHTNINGD_VERSION=v0.8.1
+ENV LIGHTNINGD_VERSION=v0.8.2
 RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd \
   && cd /opt/lightningd \
   && ./configure \
@@ -27,7 +27,7 @@ RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_V
 
 # Add custom plugins
 RUN wget -q -O /opt/lightningd/plugins/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
-  && chmod a+x /opt/lightningd/plugins/prometheus.py  
+  && chmod a+x /opt/lightningd/plugins/prometheus.py
 
 FROM alpine@sha256:769fddc7cc2f0a1c35abb2f91432e8beecf83916c421420e6a6da9f8975464b6
 

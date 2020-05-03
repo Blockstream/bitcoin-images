@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export VER=v0.8.1
+export VER=v0.8.2
 
 docker pull blockstream/lightningd:latest
 docker build --cache-from blockstream/lightningd:latest -t blockstream/lightningd:${VER} -t blockstream/lightningd:latest . || { echo -e "\nSomething broke"; exit 1; }
