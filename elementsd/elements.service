@@ -19,3 +19,6 @@ ExecStart=/usr/bin/docker run \
 ExecStop=/usr/bin/docker exec elements elements-cli stop
 ExecStopPost=/usr/bin/sleep 3
 ExecStopPost=/usr/bin/docker rm -f elements
+
+[Install]
+WantedBy=multi-user.target

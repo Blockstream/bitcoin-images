@@ -19,3 +19,6 @@ ExecStart=/usr/bin/docker run \
 ExecStop=/usr/bin/docker exec lightning lightning-cli stop
 ExecStopPost=/usr/bin/sleep 3
 ExecStopPost=/usr/bin/docker rm -f lightning
+
+[Install]
+WantedBy=multi-user.target

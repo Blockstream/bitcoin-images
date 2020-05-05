@@ -20,3 +20,6 @@ ExecStart=/usr/bin/docker run \
     -v /mnt/data/tor:/home/tor/tor:rw \
     blockstream/tor:latest tor -f /home/tor/torrc
 ExecStop=/usr/bin/docker rm -f tor
+
+[Install]
+WantedBy=multi-user.target

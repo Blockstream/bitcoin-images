@@ -5,6 +5,7 @@ ControlSocket /var/run/tor/control GroupWritable RelaxDirModeCheck
 ControlSocketsGroupWritable 1
 SocksPort unix:/var/run/tor/socks WorldWritable
 SocksPort 9050
+#ControlPort 9051
 
 CookieAuthentication 1
 CookieAuthFileGroupReadable 1
@@ -15,3 +16,8 @@ Log [handshake]debug [*]notice stderr
 HiddenServiceDir /home/tor/tor/hidden_service_v3/
 HiddenServiceVersion 3
 HiddenServicePort 80 127.0.0.1:80
+
+## only v2 possible for bitcoin
+#HiddenServiceDir /home/tor/tor/hidden_service_v2/
+#HiddenServiceVersion 2
+#HiddenServicePort 80 127.0.0.1:80
