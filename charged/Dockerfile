@@ -1,6 +1,6 @@
 FROM node:lts-slim AS builder
 
-ENV CHARGED_VERSION=master
+ENV CHARGED_VERSION=v0.4.19
 
 WORKDIR /opt/charged
 
