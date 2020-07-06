@@ -1,4 +1,4 @@
-FROM alpine@sha256:769fddc7cc2f0a1c35abb2f91432e8beecf83916c421420e6a6da9f8975464b6
+FROM sha256:185518070891758909c9f839cf4ca393ee977ac378609f700f60a771a2dfe321
 
 RUN apk update && apk add --no-cache bash wget ca-certificates gnupg
 
@@ -17,4 +17,3 @@ COPY ./elements/bin /usr/local/bin/
 COPY ./elements/include /usr/local/include/
 COPY ./elements/lib /usr/local/lib/
 COPY ./elements/share /usr/local/share/
-
