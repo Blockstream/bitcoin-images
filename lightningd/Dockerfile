@@ -50,6 +50,8 @@ RUN apk update \
 RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/requirements.txt
 
 COPY --from=builder /opt/lightningd/cli/lightning-cli /usr/local/bin/
-COPY --from=builder /opt/lightningd/lightningd/lightning* /usr/local/bin/
+COPY --from=builder /opt/lightningd/lightningd/lightning* /usr/local/bin/lightning/
 COPY --from=builder /opt/lightningd/plugins/* /usr/local/bin/plugins/
 COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
+
+RUN ln -sf /usr/local/bin/lightning/lightningd /usr/local/bin/lightningd
