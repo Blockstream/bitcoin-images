@@ -19,6 +19,8 @@ before_script:
 
 build_bitcoind_gitian:
   stage: build_gitian
+  tags:
+    - k8s-docker
   only:
     - /^bitcoind_gitian_v.*/
   script:
@@ -48,8 +50,7 @@ build_bitcoind_gitian:
 build_bitcoind:
   stage: build_push
   tags:
-    - docker
-    - k8s
+    - k8s-docker
   only:
     - /^bitcoind_v.*/
   script:
@@ -58,8 +59,7 @@ build_bitcoind:
 build_lightningd:
   stage: build_push
   tags:
-    - docker
-    - k8s
+    - k8s-docker
   only:
     - /^lightningd_v.*/
   script:
@@ -68,8 +68,7 @@ build_lightningd:
 build_charged:
   stage: build_push
   tags:
-    - docker
-    - k8s
+    - k8s-docker
   only:
     - /^charged_v.*/
   script:
@@ -78,8 +77,7 @@ build_charged:
 build_tor:
   stage: build_push
   tags:
-    - docker
-    - k8s
+    - k8s-docker
   only:
     - /^tor_v.*/
   script:
@@ -88,8 +86,7 @@ build_tor:
 build_gcloud_docker:
   stage: build_push
   tags:
-    - docker
-    - k8s
+    - k8s-docker
   only:
     - /^gcloud_docker_v.*/
   script:
@@ -98,8 +95,7 @@ build_gcloud_docker:
 build_certbot_gcs:
   stage: build_push
   tags:
-    - docker
-    - k8s
+    - k8s-docker
   only:
     - /^certbot_gcs_v.*/
   script:
