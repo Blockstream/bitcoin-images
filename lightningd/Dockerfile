@@ -20,7 +20,7 @@ RUN tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-componen
 
 # Build lightningd
 WORKDIR /opt/lightningd
-ENV LIGHTNINGD_VERSION=v0.9.1
+ENV LIGHTNINGD_VERSION=v0.9.2
 RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd \
   && ./configure
 RUN make \
