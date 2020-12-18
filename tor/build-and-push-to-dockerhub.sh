@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export VER=0.4.2.7
+export VER=0.4.3.7
 
 docker pull blockstream/tor:latest
 docker build --cache-from blockstream/tor:latest -t blockstream/tor:${VER} . || { echo -e "\nSomething broke"; exit 1; }
