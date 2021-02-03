@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export VER=0.20.1
+export VER=0.21.0
 
 docker pull blockstream/bitcoind:latest
 #docker build --cache-from blockstream/bitcoind:latest -t blockstream/bitcoind:${VER} -f Dockerfile.gitian . || { echo -e "\nSomething broke"; exit 1; }
