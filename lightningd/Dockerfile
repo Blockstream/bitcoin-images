@@ -1,30 +1,32 @@
 FROM alpine@sha256:a15790640a6690aa1730c38cf0a440e2aa44aaca9b0e8931a9f2b0d7cc90fd65 AS builder
 
 # Download bitcoin binaries
-ENV BITCOIN_VERSION=0.20.1
+ENV BITCOIN_VERSION=0.21.0
 ENV BITCOIN_PGP_KEY=01EA5486DE18A882D4C2684590C8019E36C2E964
 
-WORKDIR /opt/bitcoin
-RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz \
-  && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc
-
 RUN apk add --no-cache --upgrade ca-certificates autoconf automake \
-  build-base libressl libtool gmp-dev py3-pip \
+  build-base libressl libtool gmp-dev py3-pip python2 \
   sqlite-dev wget git file gnupg swig zlib-dev gettext \
   && pip3 install mako
 
+# Get bitcoin
+WORKDIR /opt/bitcoin
+RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz \
+  && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc
 RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${BITCOIN_PGP_KEY} \
   && gpg --verify SHA256SUMS.asc \
   && grep bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS.asc | sha256sum -c
 RUN tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
 
-# Build lightningd
+# Get c-lightning
+ENV LIGHTNINGD_VERSION=v0.9.3
+RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd 
+
+# Build c-lightning
 WORKDIR /opt/lightningd
-ENV LIGHTNINGD_VERSION=v0.9.2
-RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd \
-  && ./configure
-RUN make \
-  && make install
+RUN ./configure
+RUN make 
+RUN make install
 
 # Add custom plugins
 RUN wget -q -O /opt/lightningd/plugins/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
