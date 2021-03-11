@@ -25,12 +25,13 @@ RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_V
 # Build c-lightning
 WORKDIR /opt/lightningd
 RUN ./configure --prefix=/opt/lightning_install
-RUN make 
+RUN make
 RUN make install
 
 # Add custom plugins
-RUN wget -q -O /opt/lightningd/plugins/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
-  && chmod a+x /opt/lightningd/plugins/prometheus.py
+RUN wget -q -O /opt/lightningd/plugins/historian.py https://raw.githubusercontent.com/lightningd/plugins/master/historian/historian.py
+COPY ./connectionpool.py /opt/lightningd/plugins/connectionpool.py
+RUN chmod a+x /opt/lightningd/plugins/*
 
 FROM alpine@sha256:a15790640a6690aa1730c38cf0a440e2aa44aaca9b0e8931a9f2b0d7cc90fd65
 
@@ -49,7 +50,10 @@ RUN apk update \
   && rm -f glibc-*
 
 # install plugin dependencies
-RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/requirements.txt
+RUN apk add --virtual deps gcc musl-dev postgresql-dev python3-dev libffi-dev make
+RUN pip3 install wheel
+RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/historian/requirements.txt psycopg2
+RUN apk --purge del deps 
 
 COPY --from=builder /opt/lightning_install /usr/local
 COPY --from=builder /opt/lightningd/plugins/* /usr/local/bin/plugins/
