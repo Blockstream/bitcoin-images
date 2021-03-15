@@ -3,7 +3,7 @@ FROM arm32v7/alpine:3.12 AS builder
 COPY qemu-arm-static /usr/bin
 
 # Download bitcoin binaries
-ENV BITCOIN_VERSION=0.20.1
+ENV BITCOIN_VERSION=0.21.0
 ENV BITCOIN_PGP_KEY=01EA5486DE18A882D4C2684590C8019E36C2E964
 
 WORKDIR /opt/bitcoin
@@ -20,17 +20,15 @@ RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${BITCOIN_PGP_KEY} \
   && grep bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS.asc | sha256sum -c
 RUN tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
 
-# Build lightningd
-WORKDIR /opt/lightningd
-ENV LIGHTNINGD_VERSION=v0.9.1
-RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd \
-  && ./configure
-RUN make \
-  && make install
+# Get c-lightning
+ENV LIGHTNINGD_VERSION=v0.9.3
+RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd 
 
-# Add custom plugins
-RUN wget -q -O /opt/lightningd/plugins/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
-  && chmod a+x /opt/lightningd/plugins/prometheus.py
+# Build c-lightning
+WORKDIR /opt/lightningd
+RUN ./configure --prefix=/opt/lightning_install
+RUN make 
+RUN make install
 
 FROM arm32v7/alpine:3.12
 
@@ -48,12 +46,19 @@ RUN apk update \
  	&& apk --no-cache add glibc-bin-${GLIBC_VERSION}.apk \
   && rm -f glibc-*
 
-# install plugin dependencies
-RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/requirements.txt
+  # Copy binaries from builder
+  COPY --from=builder /opt/lightning_install /usr/local
+  COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
 
-COPY --from=builder /opt/lightningd/cli/lightning-cli /usr/local/bin/
-COPY --from=builder /opt/lightningd/lightningd/lightning* /usr/local/bin/lightning/
-COPY --from=builder /opt/lightningd/plugins/* /usr/local/bin/plugins/
-COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
+  # Install plugin dependencies
+  RUN pip3 install wheel
+  RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/summary/requirements.txt \
+    prometheus-client==0.6.0
 
-RUN ln -sf /usr/local/bin/lightning/lightningd /usr/local/bin/lightningd
+ARG PLUGIN_PATH=/usr/local/libexec/c-lightning/plugins
+
+# Add custom plugins (prometheus, summary)
+RUN wget -q -O $PLUGIN_PATH/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
+  && wget -q -O $PLUGIN_PATH/summary.py https://raw.githubusercontent.com/lightningd/plugins/master/summary/summary.py \
+  && chmod a+x $PLUGIN_PATH/* \
+  && wget -q -O $PLUGIN_PATH/summary_avail.py https://raw.githubusercontent.com/lightningd/plugins/master/summary/summary_avail.py 

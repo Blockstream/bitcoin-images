@@ -30,8 +30,7 @@ RUN make install
 
 FROM alpine@sha256:a15790640a6690aa1730c38cf0a440e2aa44aaca9b0e8931a9f2b0d7cc90fd65
 
-RUN apk add --no-cache gmp-dev sqlite-dev inotify-tools socat bash \
-  zlib-dev wget ca-certificates gnupg py3-pip
+RUN apk add --no-cache --virtual deps wget 
 
 # Add GNU Lib C
 ENV GLIBC_VERSION=2.28-r0
@@ -48,19 +47,18 @@ RUN apk update \
 COPY --from=builder /opt/lightning_install /usr/local
 COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
 
+RUN apk add --no-cache gmp-dev sqlite-dev inotify-tools socat bash \
+  zlib-dev ca-certificates gnupg py3-pip
+
 # Install plugin dependencies
-RUN apk add --virtual deps gcc musl-dev postgresql-dev python3-dev libffi-dev make
 RUN pip3 install wheel
-RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/historian/requirements.txt psycopg2
-RUN apk --purge del deps 
+RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/summary/requirements.txt
 
 ARG PLUGIN_PATH=/usr/local/libexec/c-lightning/plugins
 
-# Add custom plugins (connection pool, historian)
-COPY ./connectionpool.py $PLUGIN_PATH/connectionpool.py
-RUN mkdir -p $PLUGIN_PATH/historian/cli \
-  && wget -q https://github.com/lightningd/plugins/archive/master.zip \
-  && unzip -qqj master.zip "plugins-master/historian/cli" -d "${PLUGIN_PATH}/historian/cli" \
-  && unzip -qqj master.zip "plugins-master/historian/*" -x "plugins-master/historian/cli/*" -d "${PLUGIN_PATH}/historian/" \
-  && rm master.zip \
-  && chmod -x $PLUGIN_PATH/historian/historian-cli # we don't want lightningd to think this is a plugin at startup
+# Add custom plugins (sauron, summary)
+RUN wget -q -O $PLUGIN_PATH/sauron.py https://raw.githubusercontent.com/lightningd/plugins/master/sauron/sauron.py \
+  && wget -q -O $PLUGIN_PATH/summary.py https://raw.githubusercontent.com/lightningd/plugins/master/summary/summary.py \
+  && chmod a+x $PLUGIN_PATH/* \
+  && wget -q -O $PLUGIN_PATH/art.py https://raw.githubusercontent.com/lightningd/plugins/master/sauron/art.py \
+  && apk del deps

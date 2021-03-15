@@ -28,10 +28,6 @@ RUN ./configure --prefix=/opt/lightning_install
 RUN make 
 RUN make install
 
-# Add custom plugins
-RUN wget -q -O /opt/lightningd/plugins/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
-  && chmod a+x /opt/lightningd/plugins/prometheus.py
-
 FROM alpine@sha256:a15790640a6690aa1730c38cf0a440e2aa44aaca9b0e8931a9f2b0d7cc90fd65
 
 RUN apk add --no-cache gmp-dev sqlite-dev inotify-tools socat bash \
@@ -48,9 +44,19 @@ RUN apk update \
  	&& apk --no-cache add glibc-bin-${GLIBC_VERSION}.apk \
   && rm -f glibc-*
 
-# install plugin dependencies
-RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/requirements.txt
-
+# Copy binaries from builder
 COPY --from=builder /opt/lightning_install /usr/local
-COPY --from=builder /opt/lightningd/plugins/* /usr/local/bin/plugins/
 COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
+
+# Install plugin dependencies
+RUN pip3 install wheel
+RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/summary/requirements.txt \
+  prometheus-client==0.6.0
+
+ARG PLUGIN_PATH=/usr/local/libexec/c-lightning/plugins
+
+# Add custom plugins (prometheus, summary)
+RUN wget -q -O $PLUGIN_PATH/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
+  && wget -q -O $PLUGIN_PATH/summary.py https://raw.githubusercontent.com/lightningd/plugins/master/summary/summary.py \
+  && chmod a+x $PLUGIN_PATH/* \
+  && wget -q -O $PLUGIN_PATH/summary_avail.py https://raw.githubusercontent.com/lightningd/plugins/master/summary/summary_avail.py 
