@@ -31,8 +31,8 @@ RUN make install
 
 FROM alpine@sha256:a15790640a6690aa1730c38cf0a440e2aa44aaca9b0e8931a9f2b0d7cc90fd65
 
-RUN apk add --no-cache gmp-dev sqlite-dev inotify-tools socat bash \
-  zlib-dev wget ca-certificates gnupg py3-pip postgresql-libs
+RUN apk add --no-cache gmp-dev inotify-tools socat bash \
+  zlib-dev wget ca-certificates gnupg py3-pip sqlite-libs postgresql-libs
 
 # Add GNU Lib C
 ENV GLIBC_VERSION=2.28-r0
@@ -50,12 +50,12 @@ COPY --from=builder /opt/lightning_install /usr/local
 COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
 
 # Install plugin dependencies
-RUN apk add --virtual deps gcc musl-dev postgresql-dev python3-dev libffi-dev make
+RUN apk add --virtual deps gcc musl-dev postgresql-dev python3-dev libffi-dev make wget
 RUN pip3 install wheel
 RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/historian/requirements.txt psycopg2-binary
 RUN apk --purge del deps 
 
-ARG PLUGIN_PATH=/usr/local/libexec/c-lightning/plugins
+ARG PLUGIN_PATH=/opt/plugins
 
 # Add custom plugins (connection pool, historian)
 COPY ./connectionpool.py $PLUGIN_PATH/connectionpool.py
