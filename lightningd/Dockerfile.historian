@@ -58,7 +58,7 @@ RUN apk --purge del deps
 ARG PLUGIN_PATH=/opt/plugins
 
 # Add custom plugins (connection pool, historian)
-COPY ./connectionpool.py $PLUGIN_PATH/connectionpool.py
+COPY misc/connectionpool.py $PLUGIN_PATH/connectionpool.py
 RUN mkdir -p $PLUGIN_PATH/historian/cli \
   && wget -q https://github.com/lightningd/plugins/archive/master.zip \
   && unzip -qqj master.zip "plugins-master/historian/cli" -d "${PLUGIN_PATH}/historian/cli" \

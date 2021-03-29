@@ -47,18 +47,22 @@ RUN apk update \
 COPY --from=builder /opt/lightning_install /usr/local
 COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
 
-RUN apk add --no-cache gmp-dev sqlite-dev inotify-tools socat bash \
-  zlib-dev ca-certificates gnupg py3-pip
+RUN apk add --no-cache gmp-dev inotify-tools socat bash \
+  zlib-dev ca-certificates gnupg py3-pip sqlite-libs postgresql-libs
 
 # Install plugin dependencies
 RUN pip3 install wheel
 RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/summary/requirements.txt
 
-ARG PLUGIN_PATH=/usr/local/libexec/c-lightning/plugins
+ARG PLUGIN_PATH=/opt/plugins
 
 # Add custom plugins (sauron, summary)
-RUN wget -q -O $PLUGIN_PATH/sauron.py https://raw.githubusercontent.com/lightningd/plugins/master/sauron/sauron.py \
+RUN mkdir -p $PLUGIN_PATH \  
+  && wget -q -O $PLUGIN_PATH/sauron.py https://raw.githubusercontent.com/lightningd/plugins/master/sauron/sauron.py \
   && wget -q -O $PLUGIN_PATH/summary.py https://raw.githubusercontent.com/lightningd/plugins/master/summary/summary.py \
   && chmod a+x $PLUGIN_PATH/* \
   && wget -q -O $PLUGIN_PATH/art.py https://raw.githubusercontent.com/lightningd/plugins/master/sauron/art.py \
   && apk del deps
+
+ENTRYPOINT ["lightningd"]
+CMD ["--help"]

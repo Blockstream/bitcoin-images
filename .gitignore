@@ -1,2 +1,3 @@
 qemu-arm-static
 *.py*
+!lightningd/misc/*.py*

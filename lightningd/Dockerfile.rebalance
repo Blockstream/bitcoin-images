@@ -30,8 +30,8 @@ RUN make install
 
 FROM alpine@sha256:a15790640a6690aa1730c38cf0a440e2aa44aaca9b0e8931a9f2b0d7cc90fd65
 
-RUN apk add --no-cache gmp-dev sqlite-dev inotify-tools socat bash \
-  zlib-dev ca-certificates gnupg py3-pip npm openssl \
+RUN apk add --no-cache gmp-dev inotify-tools socat bash \
+  zlib-dev ca-certificates gnupg py3-pip npm openssl sqlite-libs postgresql-libs \
   && apk add --no-cache --virtual deps wget git
 
 # Add GNU Lib C
@@ -55,10 +55,11 @@ RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/
                  -r https://raw.githubusercontent.com/lightningd/plugins/master/summary/requirements.txt \
                  prometheus-client==0.6.0
 
-ARG PLUGIN_PATH=/usr/local/libexec/c-lightning/plugins
+ARG PLUGIN_PATH=/opt/plugins
 
 # Add custom plugins (rebalance, summary, prometheus, Ride The Lightning)
-RUN wget -q -O $PLUGIN_PATH/rebalance.py https://raw.githubusercontent.com/lightningd/plugins/master/rebalance/rebalance.py \
+RUN mkdir -p $PLUGIN_PATH \  
+  && wget -q -O $PLUGIN_PATH/rebalance.py https://raw.githubusercontent.com/lightningd/plugins/master/rebalance/rebalance.py \
   && wget -q -O $PLUGIN_PATH/summary.py https://raw.githubusercontent.com/lightningd/plugins/master/summary/summary.py \
   && wget -q -O $PLUGIN_PATH/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
   && chmod a+x $PLUGIN_PATH/* \
@@ -68,3 +69,6 @@ RUN git clone https://github.com/Ride-The-Lightning/c-lightning-REST.git $PLUGIN
   && cd $PLUGIN_PATH/rtl \
   && npm i --only=production \
   && apk del deps
+
+ENTRYPOINT ["lightningd"]
+CMD ["--help"]

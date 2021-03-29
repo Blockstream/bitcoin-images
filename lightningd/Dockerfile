@@ -6,7 +6,7 @@ ENV BITCOIN_PGP_KEY=01EA5486DE18A882D4C2684590C8019E36C2E964
 
 RUN apk add --no-cache --upgrade ca-certificates autoconf automake \
   build-base libressl libtool gmp-dev py3-pip python2 \
-  sqlite-dev wget git file gnupg swig zlib-dev gettext \
+  sqlite-dev wget git file gnupg swig zlib-dev gettext postgresql-dev \
   && pip3 install mako
 
 # Get bitcoin
@@ -24,14 +24,15 @@ RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_V
 
 # Build c-lightning
 WORKDIR /opt/lightningd
+RUN git submodule update --init --recursive
 RUN ./configure --prefix=/opt/lightning_install
-RUN make 
+RUN make -j 32
 RUN make install
 
 FROM alpine@sha256:a15790640a6690aa1730c38cf0a440e2aa44aaca9b0e8931a9f2b0d7cc90fd65
 
-RUN apk add --no-cache gmp-dev sqlite-dev inotify-tools socat bash \
-  zlib-dev wget ca-certificates gnupg py3-pip
+RUN apk add --no-cache gmp-dev inotify-tools socat bash \
+  zlib-dev wget ca-certificates gnupg py3-pip sqlite-libs postgresql-libs
 
 # Add GNU Lib C
 ENV GLIBC_VERSION=2.28-r0
@@ -53,10 +54,14 @@ RUN pip3 install wheel
 RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/summary/requirements.txt \
   prometheus-client==0.6.0
 
-ARG PLUGIN_PATH=/usr/local/libexec/c-lightning/plugins
+ARG PLUGIN_PATH=/opt/plugins
 
 # Add custom plugins (prometheus, summary)
-RUN wget -q -O $PLUGIN_PATH/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
+RUN mkdir -p $PLUGIN_PATH \
+  && wget -q -O $PLUGIN_PATH/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
   && wget -q -O $PLUGIN_PATH/summary.py https://raw.githubusercontent.com/lightningd/plugins/master/summary/summary.py \
   && chmod a+x $PLUGIN_PATH/* \
   && wget -q -O $PLUGIN_PATH/summary_avail.py https://raw.githubusercontent.com/lightningd/plugins/master/summary/summary_avail.py 
+
+ENTRYPOINT ["lightningd"]
+CMD ["--help"]
