@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export VER=0.18.1.11
+export VER=0.18.1.12
 
 docker pull blockstream/elementsd:latest
 #docker build --cache-from blockstream/elementsd:latest -t blockstream/elementsd:${VER} . -f Dockerfile.gitian || { echo -e "\nSomething broke"; exit 1; }
