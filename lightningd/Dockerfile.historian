@@ -1,7 +1,8 @@
-FROM alpine@sha256:a15790640a6690aa1730c38cf0a440e2aa44aaca9b0e8931a9f2b0d7cc90fd65 AS builder
+# 3.13.6
+FROM alpine@sha256:e15947432b813e8ffa90165da919953e2ce850bef511a0ad1287d7cb86de84b5 AS builder
 
 # Download bitcoin binaries
-ENV BITCOIN_VERSION=0.21.0
+ENV BITCOIN_VERSION=0.21.1
 ENV BITCOIN_PGP_KEY=01EA5486DE18A882D4C2684590C8019E36C2E964
 
 RUN apk add --no-cache --upgrade ca-certificates autoconf automake \
@@ -19,7 +20,7 @@ RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${BITCOIN_PGP_KEY} \
 RUN tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
 
 # Get c-lightning
-ENV LIGHTNINGD_VERSION=v0.9.3
+ENV LIGHTNINGD_VERSION=v0.10.1
 RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd 
 
 # Build c-lightning
@@ -29,10 +30,11 @@ RUN ./configure --prefix=/opt/lightning_install
 RUN make -j 32
 RUN make install
 
-FROM alpine@sha256:a15790640a6690aa1730c38cf0a440e2aa44aaca9b0e8931a9f2b0d7cc90fd65
+FROM alpine@sha256:e15947432b813e8ffa90165da919953e2ce850bef511a0ad1287d7cb86de84b5
 
+# C-Lightning deps
 RUN apk add --no-cache gmp-dev inotify-tools socat bash \
-  zlib-dev wget ca-certificates gnupg py3-pip sqlite-libs postgresql-libs
+  zlib-dev ca-certificates gnupg py3-pip sqlite-libs postgresql-libs
 
 # Add GNU Lib C
 ENV GLIBC_VERSION=2.28-r0
@@ -51,9 +53,8 @@ COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
 
 # Install plugin dependencies
 RUN apk add --virtual deps gcc musl-dev postgresql-dev python3-dev libffi-dev make wget
-RUN pip3 install wheel
+RUN pip3 install --upgrade pip wheel
 RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/historian/requirements.txt psycopg2-binary
-RUN apk --purge del deps 
 
 ARG PLUGIN_PATH=/opt/plugins
 
@@ -65,3 +66,4 @@ RUN mkdir -p $PLUGIN_PATH/historian/cli \
   && unzip -qqj master.zip "plugins-master/historian/*" -x "plugins-master/historian/cli/*" -d "${PLUGIN_PATH}/historian/" \
   && rm master.zip \
   && chmod -x $PLUGIN_PATH/historian/historian-cli # we don't want lightningd to think this is a plugin at startup
+RUN apk --purge del deps

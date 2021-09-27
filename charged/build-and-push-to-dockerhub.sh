@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION=v0.4.19
+VERSION=v0.4.23
 
 docker pull blockstream/charged:latest
 docker build --cache-from blockstream/charged:latest -t blockstream/charged:$VERSION . || `echo -e "\nSomething broke" && exit 1`
