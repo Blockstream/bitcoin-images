@@ -1,8 +1,8 @@
-FROM alpine@sha256:185518070891758909c9f839cf4ca393ee977ac378609f700f60a771a2dfe321
+FROM alpine@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a
 
-ENV ELEMENTS_VERSION=0.18.1.12
+ENV ELEMENTS_VERSION=0.21.0
 ENV ELEMENTS_PGP_KEY=DE10E82629A8CAD55B700B972F2A88D7F8D68E87
-ENV GLIBC_VERSION=2.28-r0
+ENV GLIBC_VERSION=2.34-r0
 
 WORKDIR /opt/elements
 
@@ -15,14 +15,14 @@ RUN apk update \
   && apk --no-cache add glibc-${GLIBC_VERSION}.apk \
   && apk --no-cache add glibc-bin-${GLIBC_VERSION}.apk
 
-RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz \
+RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/elements-elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz \
  && wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
 
 RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${ELEMENTS_PGP_KEY} \
   && gpg --verify SHA256SUMS.asc \
-  && grep elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS.asc | sha256sum -c \
+  && grep elements-elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS.asc | sha256sum -c \
   && mkdir elements \
-  && tar xzvf elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C elements \
+  && tar xzvf elements-elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C elements \
   && mkdir /root/.elements \
   && mv elements/bin/* /usr/local/bin/ \
   && mv elements/lib/* /usr/local/lib/ \
