@@ -1,6 +1,6 @@
-FROM alpine@sha256:ab00606a42621fb68f2ed6ad3c88be54397f981a7b70a79db3d1172b11c4367d AS builder
+FROM alpine@sha256:e15947432b813e8ffa90165da919953e2ce850bef511a0ad1287d7cb86de84b5 AS builder
 
-ARG TOR_VER=0.4.3.7
+ARG TOR_VER=0.4.6.8
 ARG TORGZ=https://dist.torproject.org/tor-$TOR_VER.tar.gz
 
 RUN apk --no-cache add --update \
@@ -9,12 +9,12 @@ RUN apk --no-cache add --update \
 RUN wget $TORGZ.asc && wget $TORGZ
 
 # Verify tar signature and install tor
-RUN gpg --keyserver pool.sks-keyservers.net --recv-keys 0x6AFEE6D49E92B601 \
-  && gpg --verify tor-$TOR_VER.tar.gz.asc || { echo "Couldn't verify sig"; exit; }
+RUN gpg --keyserver keys.openpgp.org --recv-keys 0x6AFEE6D49E92B601 \
+  && gpg --verify tor-$TOR_VER.tar.gz.asc || { echo "Couldn't verify sig"; exit 1; }
 RUN tar xfz tor-$TOR_VER.tar.gz && cd tor-$TOR_VER \
-  && ./configure && make install
+  && ./configure && make -j $(nproc --all) install
 
-FROM alpine@sha256:ab00606a42621fb68f2ed6ad3c88be54397f981a7b70a79db3d1172b11c4367d
+FROM alpine@sha256:e15947432b813e8ffa90165da919953e2ce850bef511a0ad1287d7cb86de84b5
 
 RUN apk --no-cache add --update \
   bash alpine-sdk gnupg libevent libevent-dev zlib zlib-dev openssl openssl-dev
