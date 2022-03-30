@@ -1,4 +1,6 @@
 ### Dockerized hal
+Check crate versions: https://crates.io/search?q=hal-elements.
+
 Use as:
 ```
 $ docker run --rm blockstream/hal-docker hal address inspect tb1qcw5eh6kasd3ts2a2kzg5mal7yhft0nc0h48wjm

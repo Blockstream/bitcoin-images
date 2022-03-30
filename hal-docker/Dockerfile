@@ -1,10 +1,10 @@
-FROM rust:1.50-alpine
+FROM rust:1.59-alpine
+
+ENV VER=0.8.0
 
 RUN apk --no-cache -u add bash curl jq git musl-dev
 
-ENV VER=v0.6.1
-RUN git clone https://github.com/stevenroose/hal.git -b ${VER} /opt/hal
-
 WORKDIR /opt/hal
 
-RUN cargo install hal
+RUN cargo install hal --vers $VER
+RUN cargo install hal-elements
