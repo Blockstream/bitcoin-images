@@ -106,8 +106,10 @@ RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
 
 # Add peerswap
-RUN git clone https://github.com/sputn1ck/peerswap.git $PLUGIN_PATH/ps \
+ENV PEERSWAP_COMMIT=e34a981
+RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \
+  && git checkout $PEERSWAP_COMMIT \
   && make cln-release
   
 RUN apk --purge del deps
