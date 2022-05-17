@@ -106,7 +106,8 @@ RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
 
 # Add peerswap
-ENV PEERSWAP_COMMIT=d191069
+ARG PEERSWAP_COMMIT=d191069
+ENV PEERSWAP_COMMIT=$PEERSWAP_COMMIT
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \
   && git checkout $PEERSWAP_COMMIT \
