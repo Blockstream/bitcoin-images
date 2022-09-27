@@ -1,5 +1,5 @@
-# 3.13.7
-FROM alpine@sha256:85e16a753e459ea44a8aa1dfc1cb8b625f9c487b00ea686384a96923a3691f4e AS builder
+# 3.14.4
+FROM alpine@sha256:a8c98a08ab965e9a033a8266e519519a7b615c01d22c6790a47d5853716a8726 AS builder
 
 # Download bitcoin binaries
 ENV WLADIMIRVDL_PGP_KEY=71A3B16735405025D447E8F274810B012346C9A6
@@ -24,12 +24,13 @@ RUN mkdir /opt/bitcoin \
   && tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
 
 # Get c-lightning
-ENV LIGHTNINGD_VERSION=v0.10.2
-RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd 
+ARG CLN_VERSION=v0.10.2
+ENV CLN_VERSION=$CLN_VERSION
+RUN git clone https://github.com/ElementsProject/lightning.git --depth 20 -b ${CLN_VERSION} /opt/lightningd
 
 # Build c-lightning
 WORKDIR /opt/lightningd
-RUN git submodule update --init --recursive
+RUN git submodule update --init --recursive --depth 20
 RUN ./configure --prefix=/opt/lightning_install
 # temporary fix for alpine builds
 RUN rm -r cli/test/*.c
@@ -63,6 +64,7 @@ COPY --from=builder /opt/bitcoin/share/* /usr/local/share/
 ARG PLUGIN_PATH=/opt/plugins
 ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
 
+RUN apk add --no-cache --virtual deps wget git make gcc musl-dev libffi-dev python3-dev
 RUN pip3 install --upgrade pip wheel
 RUN pip3 install -r $RAW_GH_PLUGINS/summary/requirements.txt \
   prometheus-client==0.6.0
@@ -73,6 +75,8 @@ RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
   && chmod a+x $PLUGIN_PATH/* \
   && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
+
+RUN apk --purge del deps
 
 ENTRYPOINT ["lightningd"]
 CMD ["--help"]

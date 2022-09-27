@@ -12,7 +12,7 @@ RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${B
 
 RUN apk add --no-cache --upgrade ca-certificates autoconf automake \
   build-base libressl libtool gmp-dev py3-pip \
-  sqlite-dev wget git file gnupg swig zlib-dev gettext curl-dev \
+  sqlite-dev wget git file gnupg swig zlib-dev gettext \
   && pip3 install mako
 
 RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${BITCOIN_PGP_KEY} \
@@ -21,27 +21,19 @@ RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${BITCOIN_PGP_KEY} \
 RUN tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
 
 # Get c-lightning
-ENV LIGHTNINGD_VERSION=v0.9.3
-RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd 
+ENV CLN_VERSION=v0.9.3
+RUN git clone https://github.com/ElementsProject/lightning.git -b ${CLN_VERSION} /opt/lightningd 
 
-# Build c-lightning with custom Esplora plugin
+# Build c-lightning
 WORKDIR /opt/lightningd
 RUN ./configure --prefix=/opt/lightning_install
-RUN wget -O plugins/esplora.c https://raw.githubusercontent.com/lvaccaro/esplora_clnd_plugin/master/esplora.c \
-  && wget -O Makefile.patch https://raw.githubusercontent.com/lvaccaro/esplora_clnd_plugin/master/Makefile.patch \
-  && patch -p1 < Makefile.patch \
-  && sed -i 's/LDLIBS = /LDLIBS = -lcurl /g' Makefile
-RUN make
+RUN make 
 RUN make install
-
-# Add custom plugins
-RUN wget -q -O /opt/lightningd/plugins/prometheus.py https://raw.githubusercontent.com/lightningd/plugins/master/prometheus/prometheus.py \
-  && chmod a+x /opt/lightningd/plugins/prometheus.py
 
 FROM arm32v7/alpine:3.12
 
 RUN apk add --no-cache gmp-dev sqlite-dev inotify-tools socat bash \
-  zlib-dev wget ca-certificates gnupg py3-pip curl-dev
+  zlib-dev wget ca-certificates gnupg py3-pip
 
 # Add GNU Lib C
 ENV GLIBC_VERSION=2.28-r0
@@ -54,14 +46,14 @@ RUN apk update \
  	&& apk --no-cache add glibc-bin-${GLIBC_VERSION}.apk \
   && rm -f glibc-*
 
-# Copy binaries from builder
-COPY --from=builder /opt/lightning_install /usr/local
-COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
+  # Copy binaries from builder
+  COPY --from=builder /opt/lightning_install /usr/local
+  COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
 
-# Install plugin dependencies
-RUN pip3 install wheel
-RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/summary/requirements.txt \
-  prometheus-client==0.6.0
+  # Install plugin dependencies
+  RUN pip3 install wheel
+  RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/summary/requirements.txt \
+    prometheus-client==0.6.0
 
 ARG PLUGIN_PATH=/usr/local/libexec/c-lightning/plugins
 

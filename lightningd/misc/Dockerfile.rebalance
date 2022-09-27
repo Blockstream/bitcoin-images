@@ -24,12 +24,13 @@ RUN mkdir /opt/bitcoin \
   && tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
 
 # Get c-lightning
-ENV LIGHTNINGD_VERSION=v0.10.2
-RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd 
+ARG CLN_VERSION=v0.10.2
+ENV CLN_VERSION=$CLN_VERSION
+RUN git clone https://github.com/ElementsProject/lightning.git --depth 20 -b ${CLN_VERSION} /opt/lightningd 
 
 # Build c-lightning
 WORKDIR /opt/lightningd
-RUN git submodule update --init --recursive
+RUN git submodule update --init --recursive --depth 20
 RUN ./configure --prefix=/opt/lightning_install
 # temporary fix for alpine builds
 RUN rm -r cli/test/*.c

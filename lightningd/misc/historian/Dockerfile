@@ -20,12 +20,13 @@ RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${BITCOIN_PGP_KEY} \
 RUN tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
 
 # Get c-lightning
-ENV LIGHTNINGD_VERSION=v0.10.1
-RUN git clone https://github.com/ElementsProject/lightning.git -b ${LIGHTNINGD_VERSION} /opt/lightningd 
+ARG CLN_VERSION=v0.10.1
+ENV CLN_VERSION=$CLN_VERSION
+RUN git clone https://github.com/ElementsProject/lightning.git --depth 20 -b ${CLN_VERSION} /opt/lightningd 
 
 # Build c-lightning
 WORKDIR /opt/lightningd
-RUN git submodule update --init --recursive
+RUN git submodule update --init --recursive --depth 20
 RUN ./configure --prefix=/opt/lightning_install
 RUN make -j 32
 RUN make install
@@ -59,7 +60,7 @@ RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/
 ARG PLUGIN_PATH=/opt/plugins
 
 # Add custom plugins (connection pool, historian)
-COPY misc/connectionpool.py $PLUGIN_PATH/connectionpool.py
+COPY connectionpool.py $PLUGIN_PATH/connectionpool.py
 RUN mkdir -p $PLUGIN_PATH/historian/cli \
   && wget -q https://github.com/lightningd/plugins/archive/master.zip \
   && unzip -qqj master.zip "plugins-master/historian/cli" -d "${PLUGIN_PATH}/historian/cli" \
