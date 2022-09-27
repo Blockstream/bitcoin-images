@@ -41,7 +41,7 @@ RUN mkdir /opt/elements \
   && tar xzvf elements-elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/elements
 
 # Get c-lightning
-ARG CLN_VERSION=v0.10.2
+ARG CLN_VERSION=v0.12.1
 ENV CLN_VERSION=$CLN_VERSION
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 20 -b ${CLN_VERSION} /opt/lightningd
 
@@ -90,7 +90,7 @@ RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
 
 # Add peerswap
-ARG PEERSWAP_COMMIT=18b517db81c757e462164ec6d906b639611b19cd
+ARG PEERSWAP_COMMIT=55534113b57865a26af6cc86af54cce505f6684b
 ENV PEERSWAP_COMMIT=$PEERSWAP_COMMIT
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \

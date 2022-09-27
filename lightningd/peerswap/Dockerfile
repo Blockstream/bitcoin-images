@@ -46,7 +46,7 @@ RUN mkdir /opt/golang \
   && tar -xzf /opt/go.tar.gz -C /opt/golang
 
 # Get c-lightning
-ARG CLN_VERSION=v0.10.2
+ARG CLN_VERSION=v0.12.1
 ENV CLN_VERSION=$CLN_VERSION
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 20 -b ${CLN_VERSION} /opt/lightningd
 

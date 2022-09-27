@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export VER=v0.10.2
+export VER=v0.12.1
 docker pull blockstream/lightningd:latest
 docker build -t blockstream/lightningd:${VER} -t blockstream/lightningd:latest . || { echo -e "\nSomething broke"; exit 1; }
 docker push blockstream/lightningd:latest
