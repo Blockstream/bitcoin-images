@@ -37,7 +37,7 @@ RUN rm -r cli/test/*.c
 RUN make -j 32
 RUN make install
 
-FROM alpine@sha256:85e16a753e459ea44a8aa1dfc1cb8b625f9c487b00ea686384a96923a3691f4e
+FROM alpine@sha256:a8c98a08ab965e9a033a8266e519519a7b615c01d22c6790a47d5853716a8726
 
 # C-Lightning deps
 RUN apk add --no-cache gmp-dev inotify-tools socat bash \
