@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-export VER=0.21.0.2
+export VER=22.0.2
 
 docker pull blockstream/elementsd:latest
 #docker build -t blockstream/elementsd:${VER} . -f Dockerfile.gitian || { echo -e "\nSomething broke"; exit 1; }
