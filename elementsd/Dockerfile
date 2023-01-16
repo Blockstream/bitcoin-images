@@ -1,9 +1,11 @@
 # 3.14.4
 FROM alpine@sha256:a8c98a08ab965e9a033a8266e519519a7b615c01d22c6790a47d5853716a8726
 
-ENV ELEMENTS_VERSION=22.0.2
+ARG ELEMENTS_VERSION
+ENV ELEMENTS_VERSION=$ELEMENTS_VERSION
 ENV ELEMENTS_PGP_KEY=BD0F3062F87842410B06A0432F656B0610604482
 ENV GLIBC_VERSION=2.33-r0
+ENV GH_DOWNLOAD=https://github.com/ElementsProject/elements/releases/download
 
 WORKDIR /opt/elements
 
@@ -16,8 +18,8 @@ RUN apk update \
   && apk --no-cache add glibc-${GLIBC_VERSION}.apk \
   && apk --no-cache add glibc-bin-${GLIBC_VERSION}.apk
 
-RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz \
- && wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
+RUN wget ${GH_DOWNLOAD}/elements-${ELEMENTS_VERSION}/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz \
+ && wget ${GH_DOWNLOAD}/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
 
 RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${ELEMENTS_PGP_KEY} \
   && gpg --verify SHA256SUMS.asc \

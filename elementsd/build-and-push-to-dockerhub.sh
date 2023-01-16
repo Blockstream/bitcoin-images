@@ -1,14 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -ex
 
-export VER=22.0.2
+export VER=${VER:-22.0.2}
 
 docker pull blockstream/elementsd:latest
-#docker build -t blockstream/elementsd:${VER} . -f Dockerfile.gitian || { echo -e "\nSomething broke"; exit 1; }
-docker build -t blockstream/elementsd:${VER} . || { echo -e "\nSomething broke"; exit 1; }
+docker build --network=host \
+  --build-arg ELEMENTS_VERSION=${VER} \
+  --build-arg BUILDKIT_INLINE_CACHE=1 \
+  -t blockstream/elementsd:${VER} . || { echo -e "\nSomething broke"; exit 1; }
 docker push blockstream/elementsd:${VER}
-## Uncomment to push :latest tag
-docker tag blockstream/elementsd:${VER} blockstream/elementsd:latest
-docker push blockstream/elementsd:latest
+
+if [[ $LATEST -eq 1 ]]
+then
+  docker tag blockstream/elementsd:${VER} blockstream/elementsd:latest
+  docker push blockstream/elementsd:latest
+fi
 
 SHA=$(docker inspect --format='{{index .RepoDigests 0}}' blockstream/elementsd:${VER})
 

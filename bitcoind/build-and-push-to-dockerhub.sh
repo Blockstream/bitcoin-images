@@ -1,14 +1,20 @@
-#!/bin/sh
+#!/bin/bash
+set -ex
 
-export VER=22.0
+export VER=${VER:-23.1}
 
 docker pull blockstream/bitcoind:latest
-#docker build -t blockstream/bitcoind:${VER} -f Dockerfile.gitian . || { echo -e "\nSomething broke"; exit 1; }
-docker build -t blockstream/bitcoind:${VER} . || { echo -e "\nSomething broke"; exit 1; }
+docker build --network=host \
+  --build-arg BITCOIN_VERSION=${VER} \
+  --build-arg BUILDKIT_INLINE_CACHE=1 \
+  -t blockstream/bitcoind:${VER} . || { echo -e "\nSomething broke"; exit 1; }
 docker push blockstream/bitcoind:${VER}
-## Uncomment to push :latest tag
-#docker tag blockstream/bitcoind:${VER} blockstream/bitcoind:latest
-#docker push blockstream/bitcoind:latest
+
+if [[ $LATEST -eq 1 ]]
+then
+  docker tag blockstream/bitcoind:${VER} blockstream/bitcoind:latest
+  docker push blockstream/bitcoind:latest
+fi
 
 SHA=$(docker inspect --format='{{index .RepoDigests 0}}' blockstream/bitcoind:${VER})
 

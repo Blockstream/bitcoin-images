@@ -4,99 +4,43 @@ variables:
   DOCKER_DRIVER: overlay2
   DOCKER_HOST: tcp://localhost:2375
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_BUILDKIT: 1
 
-services:
-  - docker:19-dind
-
-image: docker:18.09.2
-stages:
-  - build_gitian
-  - build_push
-
-before_script:
-  - echo $DOCKERHUB_PW | docker login -u $DOCKERHUB_USER --password-stdin
-  - echo $PWD
-
-build_bitcoind_gitian:
-  stage: build_gitian
+default:
+  image: docker:20.10.12
+  services:
+    - docker:20.10.12-dind
   tags:
     - k8s-docker
-  only:
-    - /^bitcoind_gitian_v.*/
-  script:
-    - export BITCOIN_VERSION=$BITCOIN_VERSION
-    - export BITCOIN_DIR=$BITCOIN_DIR
-    - export USE_DOCKER=1
-    - apk update --no-cache && apk --no-cache add git curl gnupg ruby openssh coreutils
-    - git clone https://github.com/devrandom/gitian-builder.git gitian-git
-    - git clone https://github.com/bitcoin/bitcoin bitcoin-git
-    - (cd gitian-git && bin/make-base-vm --docker --suite bionic)
-    - sed -i 's#HOSTS=.*#HOSTS="x86_64-linux-gnu"#' /builds/devops/bitcoin-images/bitcoin-git/contrib/gitian-descriptors/gitian-linux.yml
-    - sed -i 's#CONFIGFLAGS=.*#CONFIGFLAGS="--without-gui --enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"#' /builds/devops/bitcoin-images/bitcoin-git/contrib/gitian-descriptors/gitian-linux.yml
-    - sed -i 's#.*QT_RCC.*##g' /builds/devops/bitcoin-images/bitcoin-git/contrib/gitian-descriptors/gitian-linux.yml
-    - sed -i '0,/MAKEOPTS=(/{s/MAKEOPTS=(*/&NO_QT=1 /}' /builds/devops/bitcoin-images/gitian-git/bin/gbuild
-    - (cd gitian-git && bin/gbuild --num-make 8 --memory 8000 --url bitcoin=/builds/devops/bitcoin-images/bitcoin-git --commit bitcoin=${BITCOIN_VERSION} /builds/devops/bitcoin-images/bitcoin-git/contrib/gitian-descriptors/gitian-linux.yml)
-    - (cd gitian-git && tar -xzvf build/out/bitcoin-${BITCOIN_DIR}-x86_64-linux-gnu.tar.gz)
-    - ls -al /builds/devops/bitcoin-images/gitian-git/bitcoin-${BITCOIN_DIR}/bin/
-    - mkdir -p bitcoind/bitcoin
-    - cp -rf /builds/devops/bitcoin-images/gitian-git/bitcoin-${BITCOIN_DIR}/bin/* bitcoind/bitcoin
-    - ls -al bitcoind/bitcoin
-    - docker pull blockstream/bitcoind:latest
-    - (cd bitcoind && docker build --network=host --cache-from blockstream/bitcoind:latest -t blockstream/bitcoind:latest -t blockstream/bitcoind:${BITCOIN_VERSION} -f Dockerfile.gitian .)
-    - docker push blockstream/bitcoind:latest
-    - docker push blockstream/bitcoind:${BITCOIN_VERSION}
-    - sleep 3600
+  before_script:
+    - apk add bash
+
+stages:
+  - build_push
 
 build_bitcoind:
   stage: build_push
-  tags:
-    - k8s-docker
+  when: manual
   only:
-    - /^bitcoind_v.*/
+    changes:
+      - bitcoind/**
   script:
-    - cd bitcoind && ./build-and-push-to-dockerhub.sh
+    - cd bitcoind && bash build-and-push-to-dockerhub.sh
 
 build_lightningd:
   stage: build_push
-  tags:
-    - k8s-docker
+  when: manual
   only:
-    - /^lightningd_v.*/
+    changes:
+      - lightningd/**
   script:
-    - cd lightningd && ./build-and-push-to-dockerhub.sh
+    - cd lightningd && bash build-and-push-to-dockerhub.sh
 
-build_charged:
+build_elementsd:
   stage: build_push
-  tags:
-    - k8s-docker
+  when: manual
   only:
-    - /^charged_v.*/
+    changes:
+      - elementsd/**
   script:
-    - cd charged && ./build-and-push-to-dockerhub.sh
-
-build_tor:
-  stage: build_push
-  tags:
-    - k8s-docker
-  only:
-    - /^tor_v.*/
-  script:
-    - cd tor && ./build-and-push-to-dockerhub.sh
-
-build_gcloud_docker:
-  stage: build_push
-  tags:
-    - k8s-docker
-  only:
-    - /^gcloud_docker_v.*/
-  script:
-    - cd misc/gcloud-docker-tf && ./build-and-push-to-dockerhub.sh
-
-build_certbot_gcs:
-  stage: build_push
-  tags:
-    - k8s-docker
-  only:
-    - /^certbot_gcs_v.*/
-  script:
-    - cd misc/certbot-gcs && ./build-and-push-to-dockerhub.sh
+    - cd elementsd && bash build-and-push-to-dockerhub.sh
