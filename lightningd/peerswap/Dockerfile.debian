@@ -1,5 +1,5 @@
-# https://github.com/docker-library/golang/blob/4348478f52ef8b5072aade7eed6835fd8de6738d/1.17/buster/Dockerfile
-FROM golang:1.17.12-buster AS builder
+# https://github.com/docker-library/golang/blob/master/1.20/buster/Dockerfile
+FROM golang:1.20.4-buster AS builder
 
 WORKDIR /opt
 
@@ -28,20 +28,20 @@ RUN mkdir /opt/bitcoin \
   && rm SHA256SUMS*
 
 # Download elements binaries
-ENV ELEMENTS_VERSION=0.21.0.2
-ENV ELEMENTS_PGP_KEY=DE10E82629A8CAD55B700B972F2A88D7F8D68E87
+ENV ELEMENTS_VERSION=22.1.1
+ENV ELEMENTS_PGP_KEY=BD0F3062F87842410B06A0432F656B0610604482
 
-RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/elements-elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz \
+RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz \
  && wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
 
 RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${ELEMENTS_PGP_KEY} \
   && gpg --verify SHA256SUMS.asc \
-  && grep elements-elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS.asc | sha256sum -c
+  && grep elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS.asc | sha256sum -c
 RUN mkdir /opt/elements \
-  && tar xzvf elements-elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/elements
+  && tar xzvf elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/elements
 
 # Get c-lightning
-ARG CLN_VERSION=v0.12.1
+ARG CLN_VERSION=v23.02.2
 ENV CLN_VERSION=$CLN_VERSION
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 20 -b ${CLN_VERSION} /opt/lightningd
 
@@ -52,7 +52,7 @@ RUN ./configure --prefix=/opt/lightning_install
 RUN make -j 32 || sleep 9999
 RUN make install
 
-FROM golang:1.17.12-buster
+FROM golang:1.20.4-buster
 
 # C-Lightning deps
 RUN apt-get update
@@ -87,13 +87,17 @@ RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
   && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/prometheus/prometheus.py \
   && chmod a+x $PLUGIN_PATH/* \
-  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
+  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py \
+  && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
 
 # Add peerswap
-ARG PEERSWAP_COMMIT=55534113b57865a26af6cc86af54cce505f6684b
+ARG PEERSWAP_COMMIT=7bc994fd2be3240d5cc3f73a5a853ac536152b75
 ENV PEERSWAP_COMMIT=$PEERSWAP_COMMIT
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \
+  # allows to fetch PRs
+  && git config --local --add remote.origin.fetch '+refs/pull/*/head:refs/remotes/origin/pr/*' \
+  && git fetch \
   && git checkout $PEERSWAP_COMMIT \
   && make cln-release
 
