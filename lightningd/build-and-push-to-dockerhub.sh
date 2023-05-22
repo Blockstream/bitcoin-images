@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 set -ex
 
-export VER=${VER:-v0.12.1}
+export VER=${VER:-v23.02.2}
 
 docker pull blockstream/lightningd:latest
 docker build --network=host \
   --build-arg CLN_VERSION=${VER} \
-  --build-arg BUILDKIT_INLINE_CACHE=1 \
   -t blockstream/lightningd:${VER} . || { echo -e "\nSomething broke"; exit 1; }
 docker push blockstream/lightningd:${VER}
 

@@ -59,15 +59,15 @@ RUN apk add --no-cache ca-certificates gmp libgcc libsodium sqlite-libs zlib \
   inotify-tools socat bash gnupg py3-pip postgresql-libs
 
 # Add GNU Lib C
-# ENV GLIBC_VERSION=2.33-r0
-# RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
-#  && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk \
-#  && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}.apk
+ENV GLIBC_VERSION=2.33-r0
+RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
+ && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk \
+ && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}.apk
 
-# RUN apk update \
-#   && apk --no-cache add glibc-${GLIBC_VERSION}.apk \
-#  	&& apk --no-cache add glibc-bin-${GLIBC_VERSION}.apk \
-#   && rm -f glibc-*
+RUN apk update \
+  # context for --force-overwrite https://github.com/sgerrand/alpine-pkg-glibc/issues/185
+  && apk --no-cache add --force-overwrite glibc-${GLIBC_VERSION}.apk glibc-bin-${GLIBC_VERSION}.apk \
+  && rm -f glibc-*
 
 # Copy binaries from builder
 COPY --from=builder /opt/lightning_install /usr/local
