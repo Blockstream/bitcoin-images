@@ -5,7 +5,7 @@ WORKDIR /opt
 # Download bitcoin binaries
 ENV WLADIMIRVDL_PGP_KEY=71A3B16735405025D447E8F274810B012346C9A6
 ENV ACHOW_PGP_KEY=152812300785C96444D3334D17565732E08E5E41
-ENV BITCOIN_VERSION=22.0
+ENV BITCOIN_VERSION=24.1
 
 RUN apk add --no-cache --upgrade ca-certificates alpine-sdk autoconf automake git libtool \
   gmp-dev sqlite-dev py3-pip net-tools zlib-dev libsodium gettext \
@@ -41,7 +41,7 @@ RUN mkdir /opt/elements \
 # Get CLN
 ARG CLN_VERSION=v23.02.2
 ENV CLN_VERSION=$CLN_VERSION
-RUN git clone https://github.com/ElementsProject/lightning.git --depth 20 -b ${CLN_VERSION} /opt/lightningd
+RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VERSION} /opt/lightningd
 
 # Build CLN
 WORKDIR /opt/lightningd
@@ -100,7 +100,7 @@ RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
 
 # Add peerswap
-ARG PEERSWAP_COMMIT=7bc994fd2be3240d5cc3f73a5a853ac536152b75
+ARG PEERSWAP_COMMIT=7fac467a7921e92cc5bf4a21602a3c2f92ed9004
 ENV PEERSWAP_COMMIT=$PEERSWAP_COMMIT
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \
