@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-export VER=${VER:-23.1}
+export VER=${VER:-24.1}
 
 docker pull blockstream/bitcoind:latest
 docker build --network=host \
