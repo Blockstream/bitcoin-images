@@ -11,7 +11,7 @@ default:
   services:
     - docker:20.10.12-dind
   tags:
-    - k8s-docker
+    - cloud
   before_script:
     - apk add bash
 
