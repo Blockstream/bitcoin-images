@@ -39,7 +39,7 @@ RUN mkdir /opt/elements \
   && tar xzvf elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/elements
 
 # Get CLN
-ARG CLN_VERSION=v23.02.2
+ARG CLN_VERSION=v23.05.2
 ENV CLN_VERSION=$CLN_VERSION
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VERSION} /opt/lightningd
 

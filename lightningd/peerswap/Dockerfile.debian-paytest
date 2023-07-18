@@ -81,11 +81,12 @@ RUN pip3 install -r $RAW_GH_PLUGINS/rebalance/requirements.txt \
                  pyln-bolt7 \
                  pyln-proto
 
-# Add custom plugins (rebalance, summary, prometheus)
-RUN mkdir -p $PLUGIN_PATH \  
+# Add custom plugins (rebalance, summary, prometheus, paytest)
+RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/rebalance.py $RAW_GH_PLUGINS/rebalance/rebalance.py \
   && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
   && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/prometheus/prometheus.py \
+  && wget -q -O $PLUGIN_PATH/paytest.py $RAW_GH_PLUGINS/paytest/paytest.py \
   && chmod a+x $PLUGIN_PATH/* \
   && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py \
   && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
