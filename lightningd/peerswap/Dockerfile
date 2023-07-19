@@ -100,7 +100,7 @@ RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
 
 # Add peerswap
-ARG PEERSWAP_COMMIT=7fac467a7921e92cc5bf4a21602a3c2f92ed9004
+ARG PEERSWAP_COMMIT=725ca2cb1f8ae7c936fc3da28e0e2788852c0a2e
 ENV PEERSWAP_COMMIT=$PEERSWAP_COMMIT
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \
