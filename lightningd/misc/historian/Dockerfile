@@ -1,4 +1,4 @@
-FROM blockstream/lightningd:v0.12.1
+FROM blockstream/lightningd:v23.05.2
 
 # Install plugin dependencies
 RUN apk add --virtual deps gcc musl-dev postgresql-dev python3-dev libffi-dev make wget
