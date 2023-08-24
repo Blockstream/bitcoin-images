@@ -1,3 +1,4 @@
 *.service
 *.md
 *.conf
+*.Dockerfile.*
