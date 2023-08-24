@@ -41,7 +41,7 @@ RUN mkdir /opt/elements \
   && tar xzvf elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/elements
 
 # Get c-lightning
-ARG CLN_VERSION=v23.05.2
+ARG CLN_VERSION=v23.08
 ENV CLN_VERSION=$CLN_VERSION
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VERSION} /opt/lightningd
 
@@ -81,18 +81,17 @@ RUN pip3 install -r $RAW_GH_PLUGINS/rebalance/requirements.txt \
                  pyln-bolt7 \
                  pyln-proto
 
-# Add custom plugins (rebalance, summary, prometheus, paytest)
-RUN mkdir -p $PLUGIN_PATH \
+# Add custom plugins (rebalance, summary, prometheus)
+RUN mkdir -p $PLUGIN_PATH \  
   && wget -q -O $PLUGIN_PATH/rebalance.py $RAW_GH_PLUGINS/rebalance/rebalance.py \
   && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
   && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/prometheus/prometheus.py \
-  && wget -q -O $PLUGIN_PATH/paytest.py $RAW_GH_PLUGINS/paytest/paytest.py \
   && chmod a+x $PLUGIN_PATH/* \
   && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py \
   && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
 
 # Add peerswap
-ARG PEERSWAP_COMMIT=725ca2cb1f8ae7c936fc3da28e0e2788852c0a2e
+ARG PEERSWAP_COMMIT=19eeea491fe39cad78302096b6b2bd922af61be8
 ENV PEERSWAP_COMMIT=$PEERSWAP_COMMIT
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \

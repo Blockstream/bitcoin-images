@@ -24,7 +24,7 @@ RUN mkdir /opt/bitcoin \
   && tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
 
 # Get c-lightning
-ARG CLN_VERSION=v0.10.2
+ARG CLN_VERSION=v23.08
 ENV CLN_VERSION=$CLN_VERSION
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 20 -b ${CLN_VERSION} /opt/lightningd 
 
