@@ -32,9 +32,19 @@ build_lightningd:
   when: manual
   only:
     changes:
-      - lightningd/**
+      - lightningd/Dockerfile
   script:
     - cd lightningd && bash build-and-push-to-dockerhub.sh
+
+build_lightningd_peerswap:
+  stage: build_push
+  when: manual
+  only:
+    changes:
+      - lightningd/peerswap/*
+  script:
+    - cd lightningd/peerswap && bash build-and-push-to-dockerhub.sh
+
 
 build_elementsd:
   stage: build_push

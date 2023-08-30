@@ -2,3 +2,4 @@
 *.md
 *.conf
 *.Dockerfile.*
+build-and-push-to-dockerhub.sh

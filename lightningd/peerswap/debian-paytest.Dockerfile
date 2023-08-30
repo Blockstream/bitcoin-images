@@ -4,8 +4,8 @@ FROM golang:1.20.4-buster AS builder
 WORKDIR /opt
 
 # Download bitcoin binaries
-ENV WLADIMIRVDL_PGP_KEY=71A3B16735405025D447E8F274810B012346C9A6
-ENV ACHOW_PGP_KEY=152812300785C96444D3334D17565732E08E5E41
+ENV WLADIMIRVDL_PGP_KEY=https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/laanwj.gpg
+ENV ACHOW_PGP_KEY=https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/achow101.gpg
 ENV BITCOIN_VERSION=24.1
 
 RUN apt-get update
@@ -19,7 +19,8 @@ RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${B
   && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc \
   && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS
 
-RUN gpg --keyserver hkps://keys.openpgp.org --recv-keys ${WLADIMIRVDL_PGP_KEY} ${ACHOW_PGP_KEY} \
+RUN curl -s ${WLADIMIRVDL_PGP_KEY} | gpg --import \
+  && curl -s ${ACHOW_PGP_KEY} | gpg --import \
   && csplit -ksz SHA256SUMS.asc  /-----BEGIN/ '{*}' \
   && for i in xx*; do gpg --verify $i SHA256SUMS && break; done \
   && grep bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS | sha256sum -c
@@ -29,12 +30,12 @@ RUN mkdir /opt/bitcoin \
 
 # Download elements binaries
 ENV ELEMENTS_VERSION=22.1.1
-ENV ELEMENTS_PGP_KEY=BD0F3062F87842410B06A0432F656B0610604482
+ENV ELEMENTS_PGP_KEY="https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xbd0f3062f87842410b06a0432f656b0610604482"
 
 RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz \
  && wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
 
-RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${ELEMENTS_PGP_KEY} \
+RUN curl -s ${ELEMENTS_PGP_KEY} | gpg --import \
   && gpg --verify SHA256SUMS.asc \
   && grep elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS.asc | sha256sum -c
 RUN mkdir /opt/elements \
