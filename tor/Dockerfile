@@ -1,20 +1,33 @@
-FROM alpine@sha256:e15947432b813e8ffa90165da919953e2ce850bef511a0ad1287d7cb86de84b5 AS builder
+FROM alpine:3.18 AS builder
 
-ARG TOR_VER=0.4.6.8
-ARG TORGZ=https://dist.torproject.org/tor-$TOR_VER.tar.gz
+ARG TOR_VER
+ARG DW_TORGZ=https://dist.torproject.org/tor-$TOR_VER.tar.gz
+ARG DW_TORGZ_SHASUM=$DW_TORGZ.sha256sum
+ARG DW_TORGZ_SHASUM_ASC=$DW_TORGZ_SHASUM.asc
+
+ARG TORGZ=tor-$TOR_VER.tar.gz
+ARG TORGZ_SHASUM=$TORGZ.sha256sum
+ARG TORGZ_SHASUM_ASC=$TORGZ_SHASUM.asc
 
 RUN apk --no-cache add --update \
   alpine-sdk gnupg libevent libevent-dev zlib zlib-dev openssl openssl-dev
 
-RUN wget $TORGZ.asc && wget $TORGZ
+RUN wget $DW_TORGZ && wget $DW_TORGZ_SHASUM && wget $DW_TORGZ_SHASUM_ASC
 
 # Verify tar signature and install tor
-RUN gpg --keyserver keys.openpgp.org --recv-keys 0x6AFEE6D49E92B601 \
-  && gpg --verify tor-$TOR_VER.tar.gz.asc || { echo "Couldn't verify sig"; exit 1; }
-RUN tar xfz tor-$TOR_VER.tar.gz && cd tor-$TOR_VER \
+# https://support.torproject.org/little-t-tor/verify-little-t-tor/
+RUN gpg --keyserver keys.openpgp.org --recv-keys 2133BC600AB133E1D826D173FE43009C4607B1FB \
+&& gpg --keyserver keys.openpgp.org --recv-keys 514102454D0A87DB0767A1EBBE6A0531C18A9179 \
+  && gpg --keyserver keys.openpgp.org --recv-keys B74417EDDF22AC9F9E90F49142E86A2A11F48D36 \
+  && gpg --verify $TORGZ_SHASUM_ASC || { echo "Couldn't verify sig"; exit 1; }
+RUN sha256sum -c $TORGZ_SHASUM || { echo "SHA doesn't match"; exit 1; }
+RUN tar xfz $TORGZ && cd tor-$TOR_VER \
   && ./configure && make -j $(nproc --all) install
 
-FROM alpine@sha256:e15947432b813e8ffa90165da919953e2ce850bef511a0ad1287d7cb86de84b5
+FROM alpine:3.18
+
+ARG TOR_VER
+ENV TOR_VER=$TOR_VER
 
 RUN apk --no-cache add --update \
   bash alpine-sdk gnupg libevent libevent-dev zlib zlib-dev openssl openssl-dev
