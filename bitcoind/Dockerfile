@@ -1,4 +1,4 @@
-FROM alpine@sha256:85e16a753e459ea44a8aa1dfc1cb8b625f9c487b00ea686384a96923a3691f4e
+FROM alpine:3.18.6
 
 ARG BITCOIN_VERSION
 ENV BITCOIN_VERSION=$BITCOIN_VERSION
@@ -15,8 +15,9 @@ RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/s
 RUN apk update \
   && apk --no-cache --virtual temp add coreutils ca-certificates gnupg \
 	&& apk --no-cache add bash \
- 	&& apk --no-cache add glibc-${GLIBC_VERSION}.apk \
-	&& apk --no-cache add glibc-bin-${GLIBC_VERSION}.apk
+  # https://github.com/sgerrand/alpine-pkg-glibc/issues/185
+  && apk --no-cache add --force-overwrite glibc-${GLIBC_VERSION}.apk \
+  && apk --no-cache add --force-overwrite glibc-bin-${GLIBC_VERSION}.apk
 
 RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz \
   && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc \
