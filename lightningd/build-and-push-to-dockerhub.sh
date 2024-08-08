@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-export VER=${VER:-v23.08}
+export VER=${VER:-v24.05}
 
 docker pull blockstream/lightningd:latest
 docker build --network=host \
@@ -15,7 +15,7 @@ then
   docker push blockstream/lightningd:latest
 fi
 
-SHA=$(docker inspect --format='{{index .RepoDigests 0}}' blockstream/lightningd:latest)
+SHA=$(docker inspect --format='{{index .RepoDigests 0}}' blockstream/lightningd:${VER})
 
 echo -e "The new image is:\n${SHA}"
 

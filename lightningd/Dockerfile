@@ -1,17 +1,18 @@
-FROM alpine:3.17 AS builder
+FROM alpine:3.18 AS builder
 
 # Download bitcoin binaries
 ENV WLADIMIRVDL_PGP_KEY=https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/laanwj.gpg
 ENV ACHOW_PGP_KEY=https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/achow101.gpg
-ENV BITCOIN_VERSION=24.1
+ENV BITCOIN_VERSION=26.1
+ENV BITCOIN_TARBALL=bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz
 
 RUN apk add --no-cache --upgrade ca-certificates alpine-sdk autoconf automake git libtool \
   gmp-dev sqlite-dev py3-pip net-tools zlib-dev libsodium gettext \
-  build-base coreutils wget gnupg coreutils swig postgresql-dev \
-  && pip3 install mako mrkd mistune==0.8.4
+  build-base coreutils wget gnupg coreutils swig postgresql-dev jq
+RUN pip3 install mako mrkd mistune==0.8.4 grpcio-tools
 
 # Get bitcoin
-RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz \
+RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/${BITCOIN_TARBALL} \
   && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc \
   && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS
 
@@ -19,25 +20,25 @@ RUN curl -s ${WLADIMIRVDL_PGP_KEY} | gpg --import \
   && curl -s ${ACHOW_PGP_KEY} | gpg --import \
   && csplit -ksz SHA256SUMS.asc  /-----BEGIN/ '{*}' \
   && for i in xx*; do gpg --verify $i SHA256SUMS && break; done \
-  && grep bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS | sha256sum -c
+  && grep ${BITCOIN_TARBALL} SHA256SUMS | sha256sum -c
 RUN mkdir /opt/bitcoin \
-  && tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin
+  && tar xzvf ${BITCOIN_TARBALL} --strip-components=1 -C /opt/bitcoin
 
 # Get CLN
-ARG CLN_VERSION=v23.08
+ARG CLN_VERSION=v24.05
 ENV CLN_VERSION=$CLN_VERSION
-RUN git clone https://github.com/ElementsProject/lightning.git --depth 20 -b ${CLN_VERSION} /opt/lightningd
+RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VERSION} /opt/lightningd
 
 # Build CLN
 WORKDIR /opt/lightningd
-RUN git submodule update --init --recursive --depth 20
+RUN git submodule update --init --recursive --depth 5
 RUN ./configure --prefix=/opt/lightning_install
 # temporary fix for alpine builds
 RUN rm -r cli/test/*.c
 RUN make -j 32
 RUN make install
 
-FROM alpine:3.17
+FROM alpine:3.18
 
 # CLN deps
 RUN apk add --no-cache ca-certificates gmp libgcc libsodium sqlite-libs zlib \
@@ -66,15 +67,15 @@ ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
 
 RUN apk add --no-cache --virtual deps wget git make gcc musl-dev libffi-dev python3-dev
 RUN pip3 install --upgrade pip wheel
-RUN pip3 install -r $RAW_GH_PLUGINS/summary/requirements.txt \
+RUN pip3 install -r $RAW_GH_PLUGINS/archived/summary/requirements.txt \
   prometheus-client==0.6.0
 
 # Add custom plugins (prometheus, summary)
 RUN mkdir -p $PLUGIN_PATH \
-  && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/prometheus/prometheus.py \
-  && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
+  && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/archived/prometheus/prometheus.py \
+  && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/archived/summary/summary.py \
   && chmod a+x $PLUGIN_PATH/* \
-  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
+  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/archived/summary/summary_avail.py
 
 RUN apk --purge del deps
 
