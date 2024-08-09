@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 set -ex
 
-export VER=${VER:-v23.08}
-export PS_VER=${PS_VER:-19eeea491fe39cad78302096b6b2bd922af61be8}
+export VER=${VER:-v24.05}
+export PS_VER=${PS_VER:-5935fb4656307a87cafde2513d54deec1c26f8f2}
 
 export IMAGE=blockstream/lightningd
+export DOCKERFILE=debian.Dockerfile
 export FLAVOR=${IMAGE}:${VER}-peerswap-debian
-export DOCKERFILE=debian-paytest.Dockerfile
+# export DOCKERFILE=Dockerfile
+# export FLAVOR=${IMAGE}:${VER}-peerswap
 
-docker pull ${FLAVOR}
+docker pull ${FLAVOR} || true
 docker build \
   --network=host \
   --build-arg CLN_VERSION=${VER} \

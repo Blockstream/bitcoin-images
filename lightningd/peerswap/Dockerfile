@@ -1,58 +1,26 @@
-FROM alpine:3.17 AS builder
+FROM blockstream/lightningd:v24.05 as builder
+FROM golang:1.20-alpine3.18
 
-WORKDIR /opt
-
-# Download bitcoin binaries
-ENV WLADIMIRVDL_PGP_KEY=71A3B16735405025D447E8F274810B012346C9A6
-ENV ACHOW_PGP_KEY=152812300785C96444D3334D17565732E08E5E41
-ENV BITCOIN_VERSION=24.1
-
-RUN apk add --no-cache --upgrade ca-certificates alpine-sdk autoconf automake git libtool \
-  gmp-dev sqlite-dev py3-pip net-tools zlib-dev libsodium gettext \
-  build-base coreutils wget gnupg coreutils swig postgresql-dev \
-  && pip3 install mako mrkd mistune==0.8.4
-
-# Get bitcoin
-RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz \
-  && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc \
-  && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS
-
-RUN gpg --keyserver hkps://keys.openpgp.org --recv-keys ${WLADIMIRVDL_PGP_KEY} ${ACHOW_PGP_KEY} \
-  && csplit -ksz SHA256SUMS.asc  /-----BEGIN/ '{*}' \
-  && for i in xx*; do gpg --verify $i SHA256SUMS && break; done \
-  && grep bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS | sha256sum -c
-RUN mkdir /opt/bitcoin \
-  && tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/bitcoin \
-  && rm SHA256SUMS*
+RUN apk add --no-cache --upgrade curl gnupg
 
 # Download elements binaries
 ENV ELEMENTS_VERSION=22.1.1
-ENV ELEMENTS_PGP_KEY=BD0F3062F87842410B06A0432F656B0610604482
+ENV ELEMENTS_PGP_KEY="https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xbd0f3062f87842410b06a0432f656b0610604482"
+ENV ELEMENTS_TARBALL=elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz
 
-RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz \
+RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/${ELEMENTS_TARBALL} \
  && wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
 
-RUN gpg --keyserver keyserver.ubuntu.com --recv-keys ${ELEMENTS_PGP_KEY} \
+RUN curl -s ${ELEMENTS_PGP_KEY} | gpg --import \
   && gpg --verify SHA256SUMS.asc \
-  && grep elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz SHA256SUMS.asc | sha256sum -c
+  && grep ${ELEMENTS_TARBALL} SHA256SUMS.asc | sha256sum -c
 RUN mkdir /opt/elements \
-  && tar xzvf elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C /opt/elements
-
-# Get CLN
-ARG CLN_VERSION=v23.08
-ENV CLN_VERSION=$CLN_VERSION
-RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VERSION} /opt/lightningd
-
-# Build CLN
-WORKDIR /opt/lightningd
-RUN git submodule update --init --recursive  --depth 20
-RUN ./configure --prefix=/opt/lightning_install
-# temporary fix for alpine builds
-RUN rm -r cli/test/*.c
-RUN make -j 32
-RUN make install
-
-FROM golang:1.20-alpine3.17
+  && tar xzvf ${ELEMENTS_TARBALL} --strip-components=1 -C /opt/elements \
+  && rm ${ELEMENTS_TARBALL}
+RUN mv /opt/elements/bin/* /usr/local/bin/ \
+  && mv /opt/elements/lib/* /usr/local/lib/ \
+  && mv /opt/elements/share/* /usr/local/share/ \
+  && rm -rf /opt/elements SHA256SUMS.asc
 
 # CLN deps
 RUN apk add --no-cache ca-certificates gmp libgcc libsodium sqlite-libs zlib \
@@ -70,13 +38,10 @@ RUN apk update \
   && rm -f glibc-*
 
 # Copy binaries from builder
-COPY --from=builder /opt/lightning_install /usr/local
-COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
-COPY --from=builder /opt/bitcoin/lib/* /usr/local/lib/
-COPY --from=builder /opt/bitcoin/share/* /usr/local/share/
-COPY --from=builder /opt/elements/bin/* /usr/local/bin/
-COPY --from=builder /opt/elements/lib/* /usr/local/lib/
-COPY --from=builder /opt/elements/share/* /usr/local/share/
+COPY --from=builder /usr/local/bin/* /usr/local/bin/
+COPY --from=builder /usr/local/libexec /usr/local/libexec/
+COPY --from=builder /usr/local/lib/libbitcoinconsensus* /usr/local/lib/
+COPY --from=builder /usr/local/share/man1/bitcoin* /usr/local/share/man1/
 
 # Install plugin dependencies
 ARG PLUGIN_PATH=/opt/plugins
@@ -85,7 +50,7 @@ ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
 RUN apk add --no-cache --virtual deps wget git make gcc musl-dev libffi-dev python3-dev
 RUN pip3 install --upgrade pip wheel
 RUN pip3 install -r $RAW_GH_PLUGINS/rebalance/requirements.txt \
-                 -r $RAW_GH_PLUGINS/summary/requirements.txt \
+                 -r $RAW_GH_PLUGINS/archived/summary/requirements.txt \
                  prometheus-client==0.6.0 \
                  pyln-bolt7 \
                  pyln-proto
@@ -93,14 +58,14 @@ RUN pip3 install -r $RAW_GH_PLUGINS/rebalance/requirements.txt \
 # Add custom plugins (rebalance, summary, prometheus)
 RUN mkdir -p $PLUGIN_PATH \  
   && wget -q -O $PLUGIN_PATH/rebalance.py $RAW_GH_PLUGINS/rebalance/rebalance.py \
-  && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
-  && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/prometheus/prometheus.py \
+  && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/archived/summary/summary.py \
+  && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/archived/prometheus/prometheus.py \
   && chmod a+x $PLUGIN_PATH/* \
-  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py \
+  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/archived/summary/summary_avail.py \
   && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
 
 # Add peerswap
-ARG PEERSWAP_COMMIT=19eeea491fe39cad78302096b6b2bd922af61be8
+ARG PEERSWAP_COMMIT=5935fb4656307a87cafde2513d54deec1c26f8f2
 ENV PEERSWAP_COMMIT=$PEERSWAP_COMMIT
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \
