@@ -22,7 +22,7 @@ RUN apk update \
   && rm -rf glibc-*
 
 RUN wget ${GH_DOWNLOAD}/elements-${ELEMENTS_VERSION}/${ELEMENTS_TARBALL} \
- && wget ${GH_DOWNLOAD}/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
+  && wget ${GH_DOWNLOAD}/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
 
 RUN curl -s ${ELEMENTS_PGP_KEY} | gpg --import \
   && gpg --verify SHA256SUMS.asc \
@@ -35,3 +35,15 @@ RUN curl -s ${ELEMENTS_PGP_KEY} | gpg --import \
   && mv elements/share/* /usr/local/share/ \
   && rm -rf elements* \
   && apk --purge del deps
+
+## Copy binary
+# COPY elements-4b22137159d9-x86_64-linux-gnu.tar.gz /opt/elements/elements.tar.gz
+# RUN curl -s ${ELEMENTS_PGP_KEY} | gpg --import \
+#   && mkdir elements \
+#   && tar xzvf elements.tar.gz --strip-components=1 -C elements \
+#   && mkdir /root/.elements \
+#   && mv elements/bin/* /usr/local/bin/ \
+#   && mv elements/lib/* /usr/local/lib/ \
+#   && mv elements/share/* /usr/local/share/ \
+#   && rm -rf elements* \
+#   && apk --purge del deps

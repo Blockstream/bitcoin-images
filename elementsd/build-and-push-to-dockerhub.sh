@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-export VER=${VER:-23.2.2}
+export VER=${VER:-23.2.3}
 
 docker pull blockstream/elementsd:latest
 docker build --network=host \
