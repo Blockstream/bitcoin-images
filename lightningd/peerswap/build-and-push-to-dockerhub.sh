@@ -2,7 +2,7 @@
 set -ex
 
 export VER=${VER:-v24.05}
-export PS_VER=${PS_VER:-5935fb4656307a87cafde2513d54deec1c26f8f2}
+export PS_VER=${PS_VER:-513f0c6}
 
 export IMAGE=blockstream/lightningd
 export DOCKERFILE=debian.Dockerfile
