@@ -67,15 +67,15 @@ ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
 
 RUN apk add --no-cache --virtual deps wget git make gcc musl-dev libffi-dev python3-dev
 RUN pip3 install --upgrade pip wheel
-RUN pip3 install -r $RAW_GH_PLUGINS/archived/summary/requirements.txt \
+RUN pip3 install -r $RAW_GH_PLUGINS/summary/requirements.txt \
   prometheus-client==0.6.0
 
 # Add custom plugins (prometheus, summary)
 RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/archived/prometheus/prometheus.py \
-  && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/archived/summary/summary.py \
+  && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
   && chmod a+x $PLUGIN_PATH/* \
-  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/archived/summary/summary_avail.py
+  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
 
 RUN apk --purge del deps
 

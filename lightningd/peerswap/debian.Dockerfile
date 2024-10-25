@@ -82,7 +82,7 @@ RUN pip3 install --upgrade pip wheel
 # Not installing paytest's deps since they should be covered by other packages'
 ## and its pyln-client/proto version requirement was a bit too old (0.9.2 up to 0.10.0)
 RUN pip3 install -r $RAW_GH_PLUGINS/rebalance/requirements.txt \
-                 -r $RAW_GH_PLUGINS/archived/summary/requirements.txt \
+                 -r $RAW_GH_PLUGINS/summary/requirements.txt \
                  prometheus-client==0.6.0 \
                  pyln-bolt7 \
                  pyln-proto
@@ -90,11 +90,11 @@ RUN pip3 install -r $RAW_GH_PLUGINS/rebalance/requirements.txt \
 # Add custom plugins (rebalance, summary, prometheus, paytest)
 RUN mkdir -p $PLUGIN_PATH \  
   && wget -q -O $PLUGIN_PATH/rebalance.py $RAW_GH_PLUGINS/rebalance/rebalance.py \
-  && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/archived/summary/summary.py \
+  && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
   && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/archived/prometheus/prometheus.py \
   && wget -q -O $PLUGIN_PATH/paytest.py $RAW_GH_PLUGINS/archived/paytest/paytest.py \
   && chmod a+x $PLUGIN_PATH/* \
-  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/archived/summary/summary_avail.py \
+  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py \
   && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
 
 # Add peerswap
