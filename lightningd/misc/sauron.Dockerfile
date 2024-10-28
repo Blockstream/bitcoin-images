@@ -55,16 +55,16 @@ COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
 # Install plugin dependencies
 RUN apk add --no-cache --virtual deps wget 
 RUN pip3 install --upgrade pip wheel
-RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/master/summary/requirements.txt
+RUN pip3 install -r https://raw.githubusercontent.com/lightningd/plugins/3fc4ece1ba42bf69b4f8ab6f5683decada0502b2/summary/requirements.txt
 
 ARG PLUGIN_PATH=/opt/plugins
 
 # Add custom plugins (sauron, summary)
 RUN mkdir -p $PLUGIN_PATH \  
-  && wget -q -O $PLUGIN_PATH/sauron.py https://raw.githubusercontent.com/lightningd/plugins/master/sauron/sauron.py \
-  && wget -q -O $PLUGIN_PATH/summary.py https://raw.githubusercontent.com/lightningd/plugins/master/summary/summary.py \
+  && wget -q -O $PLUGIN_PATH/sauron.py https://raw.githubusercontent.com/lightningd/plugins/3fc4ece1ba42bf69b4f8ab6f5683decada0502b2/sauron/sauron.py \
+  && wget -q -O $PLUGIN_PATH/summary.py https://raw.githubusercontent.com/lightningd/plugins/3fc4ece1ba42bf69b4f8ab6f5683decada0502b2/summary/summary.py \
   && chmod a+x $PLUGIN_PATH/* \
-  && wget -q -O $PLUGIN_PATH/art.py https://raw.githubusercontent.com/lightningd/plugins/master/sauron/art.py
+  && wget -q -O $PLUGIN_PATH/art.py https://raw.githubusercontent.com/lightningd/plugins/3fc4ece1ba42bf69b4f8ab6f5683decada0502b2/sauron/art.py
 RUN apk --purge del deps
 
 ENTRYPOINT ["lightningd"]

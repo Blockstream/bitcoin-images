@@ -74,7 +74,7 @@ COPY --from=builder /opt/elements/share/* /usr/local/share/
 
 # Install plugin dependencies
 ARG PLUGIN_PATH=/opt/plugins
-ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
+ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/3fc4ece1ba42bf69b4f8ab6f5683decada0502b2
 
 RUN apt-get update
 RUN apt-get install -yq wget make gcc libffi-dev python3-dev python3-gdbm
