@@ -1,4 +1,4 @@
-FROM blockstream/lightningd:v24.05 as builder
+FROM blockstream/lightningd:v24.08.2 as builder
 FROM golang:1.20-alpine3.18
 
 RUN apk add --no-cache --upgrade curl gnupg

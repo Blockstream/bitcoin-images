@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-export VER=${VER:-v24.05}
+export VER=${VER:-v24.08.2}
 
 docker pull blockstream/lightningd:latest
 docker build --network=host \

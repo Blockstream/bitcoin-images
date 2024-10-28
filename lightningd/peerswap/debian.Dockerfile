@@ -45,7 +45,7 @@ RUN mkdir /opt/elements \
   && rm SHA256SUMS* ${ELEMENTS_TARBALL}
 
 # Get c-lightning
-ARG CLN_VERSION=v24.05
+ARG CLN_VERSION=v24.08.2
 ENV CLN_VERSION=$CLN_VERSION
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VERSION} /opt/lightningd
 

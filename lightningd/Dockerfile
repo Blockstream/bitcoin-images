@@ -25,7 +25,7 @@ RUN mkdir /opt/bitcoin \
   && tar xzvf ${BITCOIN_TARBALL} --strip-components=1 -C /opt/bitcoin
 
 # Get CLN
-ARG CLN_VERSION=v24.05
+ARG CLN_VERSION=v24.08.2
 ENV CLN_VERSION=$CLN_VERSION
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VERSION} /opt/lightningd
 

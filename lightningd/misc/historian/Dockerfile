@@ -1,4 +1,4 @@
-FROM blockstream/lightningd:v24.05
+FROM blockstream/lightningd:v24.08.2
 
 # Install plugin dependencies
 RUN apk add --virtual deps alpine-sdk autoconf automake libtool postgresql-dev python3-dev libffi-dev wget
