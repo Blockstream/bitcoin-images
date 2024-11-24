@@ -1,21 +1,16 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -ex
 
-export VER=${VER:-23.2.3}
-
-docker pull blockstream/elementsd:latest
-docker build --network=host \
+export VER=${VER:-23.2.4}
+docker buildx build --platform linux/amd64,linux/arm64 \
+  --push \
+  --cache-from bblockstream/elementsd:latest \
   --build-arg ELEMENTS_VERSION=${VER} \
   --build-arg BUILDKIT_INLINE_CACHE=1 \
   -t blockstream/elementsd:${VER} . || { echo -e "\nSomething broke"; exit 1; }
-docker push blockstream/elementsd:${VER}
 
 if [[ $LATEST -eq 1 ]]
 then
   docker tag blockstream/elementsd:${VER} blockstream/elementsd:latest
   docker push blockstream/elementsd:latest
 fi
-
-SHA=$(docker inspect --format='{{index .RepoDigests 0}}' blockstream/elementsd:${VER})
-
-echo -e "The new image is:\n${SHA}"

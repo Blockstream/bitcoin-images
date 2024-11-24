@@ -1,19 +1,31 @@
 variables:
   GIT_SUBMODULE_STRATEGY: none
   CI_DISPOSABLE_ENVIRONMENT: "true"
-  DOCKER_DRIVER: overlay2
-  DOCKER_HOST: tcp://localhost:2375
+  DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
   DOCKER_BUILDKIT: 1
 
 default:
-  image: docker:20.10.12
+  image: docker:27
   services:
-    - docker:20.10.12-dind
+    - name: docker:27-dind
+      command: ["dockerd", "--host=tcp://0.0.0.0:2375"]
+      alias: "docker"
+  before_script:
+    - docker info
+    - docker buildx create
+      --driver=docker-container
+      --name=buildkit-builder
+      --use
+      --platform linux/amd64,linux/arm64
   tags:
     - cloud
-  before_script:
-    - apk add bash
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - unknown_failure
+      - stuck_or_timeout_failure
 
 stages:
   - build_push
@@ -25,7 +37,7 @@ build_bitcoind:
     changes:
       - bitcoind/**
   script:
-    - cd bitcoind && bash build-and-push-to-dockerhub.sh
+    - cd bitcoind && sh ./build-and-push-to-dockerhub.sh
 
 build_lightningd:
   stage: build_push
@@ -34,7 +46,7 @@ build_lightningd:
     changes:
       - lightningd/Dockerfile
   script:
-    - cd lightningd && bash build-and-push-to-dockerhub.sh
+    - cd lightningd && sh ./build-and-push-to-dockerhub.sh
 
 build_lightningd_peerswap:
   stage: build_push
@@ -43,7 +55,7 @@ build_lightningd_peerswap:
     changes:
       - lightningd/peerswap/*
   script:
-    - cd lightningd/peerswap && bash build-and-push-to-dockerhub.sh
+    - cd lightningd/peerswap && sh ./build-and-push-to-dockerhub.sh
 
 build_lightningd_historian:
   stage: build_push
@@ -52,7 +64,7 @@ build_lightningd_historian:
     changes:
       - lightningd/misc/historian/*
   script:
-    - cd lightningd/misc/historian && bash build-and-push-to-dockerhub.sh
+    - cd lightningd/misc/historian && sh ./build-and-push-to-dockerhub.sh
 
 build_elementsd:
   stage: build_push
@@ -61,4 +73,4 @@ build_elementsd:
     changes:
       - elementsd/**
   script:
-    - cd elementsd && bash build-and-push-to-dockerhub.sh
+    - cd elementsd && sh ./build-and-push-to-dockerhub.sh

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -ex
 
 export VER=${VER:-v24.08.2}
@@ -10,19 +10,12 @@ export FLAVOR=${IMAGE}:${VER}-peerswap-debian
 # export DOCKERFILE=Dockerfile
 # export FLAVOR=${IMAGE}:${VER}-peerswap
 
-docker pull ${FLAVOR} || true
-docker build \
-  --network=host \
-  --build-arg CLN_VERSION=${VER} \
-  --build-arg PEERSWAP_COMMIT=${PS_VER} \
-  -f ${DOCKERFILE} \
-  -t ${FLAVOR}-${PS_VER} \
-  --progress=plain \
-  -t ${FLAVOR} . || { echo "Something broke"; exit 1; }
-
-docker push ${FLAVOR}
-docker push ${FLAVOR}-${PS_VER}
-
-SHA=$(docker inspect --format='{{index .RepoDigests 0}}' ${FLAVOR})
-
-echo "The new image is:\n${SHA}"
+docker buildx build \
+    --platform linux/amd64,arm64 \
+    --push \
+    --cache-from ${FLAVOR} \
+    --build-arg CLN_VERSION=${VER} \
+    --build-arg PEERSWAP_COMMIT=${PS_VER} \
+    -t ${FLAVOR} \
+    -f ${DOCKERFILE} \
+    -t ${FLAVOR}-${PS_VER} . || { echo -e "\nSomething broke"; exit 1; }

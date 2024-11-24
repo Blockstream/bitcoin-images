@@ -1,8 +1,10 @@
-FROM blockstream/lightningd:v24.08.2
+ARG VER=latest
+FROM blockstream/lightningd:${VER}
 
 # Install plugin dependencies
-RUN apk add --virtual deps alpine-sdk autoconf automake libtool postgresql-dev python3-dev libffi-dev wget
-RUN pip3 install --upgrade pip wheel poetry psycopg2-binary inotify sqlalchemy python-dotenv
+RUN apt install -qfy jq autoconf automake build-essential git libtool libsqlite3-dev libffi-dev \
+    python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext wget unzip pkg-config
+RUN pip3 install poetry --break-system-packages
 
 ENV PLUGIN_PATH=/opt/plugins
 
@@ -18,5 +20,6 @@ RUN mkdir -p $PLUGIN_PATH/historian/cli \
 RUN cd $PLUGIN_PATH/historian \
   && poetry install
 
-RUN apk --purge del deps \
-  && pip3 uninstall -y poetry
+RUN apt remove -qfy wget unzip jq autoconf automake build-essential git
+RUN apt clean && apt autoclean \
+  && pip3 uninstall -y poetry --break-system-packages

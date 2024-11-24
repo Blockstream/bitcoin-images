@@ -1,14 +1,11 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -ex
 
-export VER=${VER:-v24.08.2-historian}
+export VER=${VER:-v24.08.2}
 
-docker pull blockstream/lightningd:latest
-docker build --network=host \
-  -t blockstream/lightningd:${VER} . || { echo -e "\nSomething broke"; exit 1; }
-docker push blockstream/lightningd:${VER}
-
-SHA=$(docker inspect --format='{{index .RepoDigests 0}}' blockstream/lightningd:${VER})
-
-echo -e "The new image is:\n${SHA}"
-
+docker buildx build \
+    --platform linux/amd64 \
+    --push \
+    --cache-from blockstream/lightningd:latest \
+    --build-arg VER=${VER} \
+    -t blockstream/lightningd:${VER}-historian . || { echo -e "\nSomething broke"; exit 1; }

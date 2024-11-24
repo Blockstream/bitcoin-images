@@ -1,6 +1,7 @@
-FROM rust:1.59-alpine
+FROM rust:1.82-alpine
 
-ENV VER=0.8.0
+ARG VER
+ENV VER=$VER
 
 RUN apk --no-cache -u add bash curl jq git musl-dev
 

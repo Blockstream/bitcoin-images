@@ -1,83 +1,56 @@
-FROM alpine:3.18 AS builder
-
-# Download bitcoin binaries
-ENV WLADIMIRVDL_PGP_KEY=https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/laanwj.gpg
-ENV ACHOW_PGP_KEY=https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/achow101.gpg
-ENV BITCOIN_VERSION=26.1
-ENV BITCOIN_TARBALL=bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz
-
-RUN apk add --no-cache --upgrade ca-certificates alpine-sdk autoconf automake git libtool \
-  gmp-dev sqlite-dev py3-pip net-tools zlib-dev libsodium gettext \
-  build-base coreutils wget gnupg coreutils swig postgresql-dev jq
-RUN pip3 install mako mrkd mistune==0.8.4 grpcio-tools
-
-# Get bitcoin
-RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/${BITCOIN_TARBALL} \
-  && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc \
-  && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS
-
-RUN curl -s ${WLADIMIRVDL_PGP_KEY} | gpg --import \
-  && curl -s ${ACHOW_PGP_KEY} | gpg --import \
-  && csplit -ksz SHA256SUMS.asc  /-----BEGIN/ '{*}' \
-  && for i in xx*; do gpg --verify $i SHA256SUMS && break; done \
-  && grep ${BITCOIN_TARBALL} SHA256SUMS | sha256sum -c
-RUN mkdir /opt/bitcoin \
-  && tar xzvf ${BITCOIN_TARBALL} --strip-components=1 -C /opt/bitcoin
+ARG BITCOIN_VERSION=27.0
+FROM blockstream/bitcoind:${BITCOIN_VERSION} AS builder
 
 # Get CLN
-ARG CLN_VERSION=v24.08.2
+ARG CLN_VERSION
 ENV CLN_VERSION=$CLN_VERSION
+RUN apt update \
+  && apt install -qfy jq autoconf automake build-essential git libtool libsqlite3-dev libffi-dev \
+                       python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext protobuf-compiler
+RUN pip3 install mako --break-system-packages \
+ && pip3 install grpcio-tools --break-system-packages
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VERSION} /opt/lightningd
 
 # Build CLN
 WORKDIR /opt/lightningd
 RUN git submodule update --init --recursive --depth 5
 RUN ./configure --prefix=/opt/lightning_install
-# temporary fix for alpine builds
-RUN rm -r cli/test/*.c
-RUN make -j 32
+RUN make -j$(nproc)
 RUN make install
-
-FROM alpine:3.18
-
-# CLN deps
-RUN apk add --no-cache ca-certificates gmp libgcc libsodium sqlite-libs zlib \
- inotify-tools socat bash gnupg py3-pip postgresql-libs
-
-# # Add GNU Lib C
-ENV GLIBC_VERSION=2.33-r0
-RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
- && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk \
- && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}.apk
-
-RUN apk update \
-  # context for --force-overwrite https://github.com/sgerrand/alpine-pkg-glibc/issues/185
-  && apk --no-cache add --force-overwrite glibc-${GLIBC_VERSION}.apk glibc-bin-${GLIBC_VERSION}.apk \
-  && rm -f glibc-*
-
-# Copy binaries from builder
-COPY --from=builder /opt/lightning_install /usr/local
-COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
-COPY --from=builder /opt/bitcoin/lib/* /usr/local/lib/
-COPY --from=builder /opt/bitcoin/share/* /usr/local/share/
 
 # Install plugin dependencies
 ARG PLUGIN_PATH=/opt/plugins
-ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/3fc4ece1ba42bf69b4f8ab6f5683decada0502b2
-
-RUN apk add --no-cache --virtual deps wget git make gcc musl-dev libffi-dev python3-dev
-RUN pip3 install --upgrade pip wheel
+ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
+RUN pip3 install --upgrade pip wheel --break-system-packages
 RUN pip3 install -r $RAW_GH_PLUGINS/summary/requirements.txt \
-  prometheus-client==0.6.0
+  prometheus-client==0.6.0 --break-system-packages
 
 # Add custom plugins (prometheus, summary)
-RUN mkdir -p $PLUGIN_PATH \
-  && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/archived/prometheus/prometheus.py \
-  && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
-  && chmod a+x $PLUGIN_PATH/* \
-  && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
+RUN apt install -qfy wget
+RUN mkdir -p $PLUGIN_PATH
+RUN wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/archived/prometheus/prometheus.py
+RUN wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py
+RUN chmod a+x $PLUGIN_PATH/*
+RUN wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
 
-RUN apk --purge del deps
+# Final image
+FROM debian:bookworm-slim
+
+# CLN deps
+RUN apt update \
+ && apt install -qfy jq libtool libsqlite3-dev libffi-dev \
+  python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext
+
+# Copy binaries from builder
+COPY --from=builder /opt/lightning_install /usr/local
+COPY --from=builder /usr/local/bin/* /usr/local/bin/
+COPY --from=builder /usr/local/lib/* /usr/local/lib/
+COPY --from=builder /usr/local/share/* /usr/local/share/
+COPY --from=builder /opt/plugins /opt/plugins
+
+RUN apt clean && apt autoclean
 
 ENTRYPOINT ["lightningd"]
 CMD ["--help"]
