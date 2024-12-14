@@ -83,3 +83,12 @@ build_waterfalls:
       - waterfalls/**
   script:
     - cd waterfalls && sh ./build-and-push-to-dockerhub.sh
+
+build_electrsd:
+  stage: build_push
+  when: manual
+  only:
+    changes:
+      - electrsd/**
+  script:
+    - cd electrsd && sh ./build-and-push-to-dockerhub.sh
