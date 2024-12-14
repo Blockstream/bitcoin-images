@@ -74,3 +74,12 @@ build_elementsd:
       - elementsd/**
   script:
     - cd elementsd && sh ./build-and-push-to-dockerhub.sh
+
+build_waterfalls:
+  stage: build_push
+  when: manual
+  only:
+    changes:
+      - waterfalls/**
+  script:
+    - cd waterfalls && sh ./build-and-push-to-dockerhub.sh
