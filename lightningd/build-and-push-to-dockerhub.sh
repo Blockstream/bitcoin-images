@@ -15,6 +15,5 @@ docker buildx build \
 
 if [[ $LATEST -eq 1 ]]
 then
-  docker tag blockstream/lightningd:${VER} blockstream/lightningd:latest
-  docker push blockstream/lightningd:latest
+  docker buildx imagetools create -t blockstream/lightningd:latest blockstream/lightningd:${VER}
 fi

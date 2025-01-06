@@ -11,6 +11,5 @@ docker buildx build --platform linux/amd64,linux/arm64 \
 
 if [[ $LATEST -eq 1 ]]
 then
-  docker tag blockstream/bitcoind:${VER} blockstream/bitcoind:latest
-  docker push blockstream/bitcoind:latest
+  docker buildx imagetools create -t blockstream/bitcoind:latest blockstream/bitcoind:${VER}
 fi
