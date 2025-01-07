@@ -1,5 +1,6 @@
 FROM debian:bookworm-slim
 
+ARG TARGETARCH TARGETOS
 ARG BITCOIN_VERSION
 ENV BITCOIN_VERSION=$BITCOIN_VERSION
 ENV WLADIMIRVDL_PGP_KEY=71A3B16735405025D447E8F274810B012346C9A6
@@ -35,6 +36,7 @@ RUN mkdir -p bitcoin /root/.bitcoin \
   fi \
 	&& mv bitcoin/bin/* /usr/local/bin/ \
   && mv bitcoin/lib/* /usr/local/lib/ \
+  && mv bitcoin/include/* /usr/local/include/ \
   && mv bitcoin/share/* /usr/local/share/
 
-RUN apt-get clean && apt-get autoclean
+RUN apt clean && apt autoclean
