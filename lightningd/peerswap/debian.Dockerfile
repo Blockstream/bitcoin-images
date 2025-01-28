@@ -1,5 +1,5 @@
-# https://github.com/docker-library/golang/blob/master/1.21/bullseye/Dockerfile
-FROM golang:1.21.13-bullseye AS builder
+# https://github.com/docker-library/golang/blob/master/1.22/bullseye/Dockerfile
+FROM golang:1.22.11-bullseye AS builder
 
 WORKDIR /opt
 
@@ -56,7 +56,7 @@ RUN ./configure --prefix=/opt/lightning_install
 RUN make -j 32 || sleep 9999
 RUN make install
 
-FROM golang:1.21.13-bullseye
+FROM golang:1.22.11-bullseye
 
 # C-Lightning deps
 RUN apt-get update

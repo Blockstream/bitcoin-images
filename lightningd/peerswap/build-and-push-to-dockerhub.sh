@@ -2,7 +2,7 @@
 set -ex
 
 export VER=${VER:-v24.08.2}
-export PS_VER=${PS_VER:-513f0c6}
+export PS_VER=${PS_VER:-3eadb6}
 
 export IMAGE=blockstream/lightningd
 export DOCKERFILE=debian.Dockerfile
@@ -10,8 +10,9 @@ export FLAVOR=${IMAGE}:${VER}-peerswap-debian
 # export DOCKERFILE=Dockerfile
 # export FLAVOR=${IMAGE}:${VER}-peerswap
 
+# --platform linux/amd64,arm64 \
 docker buildx build \
-    --platform linux/amd64,arm64 \
+    --platform linux/amd64 \
     --push \
     --cache-from ${FLAVOR} \
     --build-arg CLN_VERSION=${VER} \
