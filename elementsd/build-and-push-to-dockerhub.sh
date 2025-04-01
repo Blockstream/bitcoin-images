@@ -7,6 +7,7 @@ docker buildx build --platform linux/amd64,linux/arm64 \
   --cache-from blockstream/elementsd:latest \
   --build-arg ELEMENTS_VERSION=${VER} \
   --build-arg BUILDKIT_INLINE_CACHE=1 \
+  --build-arg GH_REPO \
   -t blockstream/elementsd:${VER} . || { echo -e "\nSomething broke"; exit 1; }
 
 if [[ $LATEST -eq 1 ]]
