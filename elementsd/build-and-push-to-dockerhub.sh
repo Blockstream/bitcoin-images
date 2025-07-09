@@ -1,7 +1,7 @@
 #!/bin/sh
 set -ex
 
-export VER=${VER:-23.2.5}
+export VER=${VER:-23.3.0}
 docker buildx build --platform linux/amd64,linux/arm64 \
   --push \
   --cache-from blockstream/elementsd:latest \
