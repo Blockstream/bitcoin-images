@@ -1,7 +1,7 @@
 #!/bin/sh
 set -ex
 
-export VER=9640f8a
+export VER=4abb0d99
 
 docker buildx build \
     --platform linux/amd64,linux/arm64 \
