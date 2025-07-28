@@ -1,26 +1,10 @@
-FROM blockstream/lightningd:v24.08.2 as builder
+ARG CLN_VER=v24.08.2
+ARG ELEMENTS_VER=22.1.1
+FROM blockstream/lightningd:${CLN_VER} as cln
+FROM blockstream/elementsd:${ELEMENTS_VER} AS elementsd
 FROM golang:1.20-alpine3.18
 
 RUN apk add --no-cache --upgrade curl gnupg
-
-# Download elements binaries
-ENV ELEMENTS_VERSION=22.1.1
-ENV ELEMENTS_PGP_KEY="https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xbd0f3062f87842410b06a0432f656b0610604482"
-ENV ELEMENTS_TARBALL=elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz
-
-RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/${ELEMENTS_TARBALL} \
- && wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
-
-RUN curl -s ${ELEMENTS_PGP_KEY} | gpg --import \
-  && gpg --verify SHA256SUMS.asc \
-  && grep ${ELEMENTS_TARBALL} SHA256SUMS.asc | sha256sum -c
-RUN mkdir /opt/elements \
-  && tar xzvf ${ELEMENTS_TARBALL} --strip-components=1 -C /opt/elements \
-  && rm ${ELEMENTS_TARBALL}
-RUN mv /opt/elements/bin/* /usr/local/bin/ \
-  && mv /opt/elements/lib/* /usr/local/lib/ \
-  && mv /opt/elements/share/* /usr/local/share/ \
-  && rm -rf /opt/elements SHA256SUMS.asc
 
 # CLN deps
 RUN apk add --no-cache ca-certificates gmp libgcc libsodium sqlite-libs zlib \
@@ -37,11 +21,14 @@ RUN apk update \
   && apk --no-cache add --force-overwrite glibc-${GLIBC_VERSION}.apk glibc-bin-${GLIBC_VERSION}.apk \
   && rm -f glibc-*
 
-# Copy binaries from builder
-COPY --from=builder /usr/local/bin/* /usr/local/bin/
-COPY --from=builder /usr/local/libexec /usr/local/libexec/
-COPY --from=builder /usr/local/lib/libbitcoinconsensus* /usr/local/lib/
-COPY --from=builder /usr/local/share/man1/bitcoin* /usr/local/share/man1/
+# Copy CLN and Bitcoin binaries from cln + Elements from elementsd
+COPY --from=cln /usr/local/bin/* /usr/local/bin/
+COPY --from=cln /usr/local/libexec /usr/local/libexec/
+COPY --from=cln /usr/local/lib/libbitcoinconsensus* /usr/local/lib/
+COPY --from=cln /usr/local/share/man1/bitcoin* /usr/local/share/man1/
+COPY --from=elementsd /usr/local/bin/* /usr/local/bin/
+COPY --from=elementsd /usr/local/lib/* /usr/local/lib/
+COPY --from=elementsd /usr/local/share/* /usr/local/share/
 
 # Install plugin dependencies
 ARG PLUGIN_PATH=/opt/plugins
@@ -65,14 +52,14 @@ RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
 
 # Add peerswap
-ARG PEERSWAP_COMMIT=5935fb4656307a87cafde2513d54deec1c26f8f2
-ENV PEERSWAP_COMMIT=$PEERSWAP_COMMIT
+ARG PEERSWAP_VER=5935fb4656307a87cafde2513d54deec1c26f8f2
+ENV PEERSWAP_VER=${PEERSWAP_VER}
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \
   # allows to fetch PRs
   && git config --local --add remote.origin.fetch '+refs/pull/*/head:refs/remotes/origin/pr/*' \
   && git fetch \
-  && git checkout $PEERSWAP_COMMIT \
+  && git checkout ${PEERSWAP_VER} \
   && make cln-release
   
 RUN apk --purge del deps

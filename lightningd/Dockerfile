@@ -1,9 +1,9 @@
-ARG BITCOIN_VERSION=27.0
-FROM blockstream/bitcoind:${BITCOIN_VERSION} AS builder
+ARG BITCOIN_VER=27.0
+FROM blockstream/bitcoind:${BITCOIN_VER} AS builder
 
 # Get CLN
-ARG CLN_VERSION
-ENV CLN_VERSION=$CLN_VERSION
+ARG CLN_VER=v24.08.2
+ENV CLN_VER=${CLN_VER}
 RUN apt update \
   && apt install -qfy jq autoconf automake build-essential git libtool libsqlite3-dev libffi-dev \
                        python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext protobuf-compiler
@@ -11,7 +11,7 @@ RUN pip3 install mako --break-system-packages \
  && pip3 install grpcio-tools --break-system-packages
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
-RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VERSION} /opt/lightningd
+RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VER} /opt/lightningd
 
 # Build CLN
 WORKDIR /opt/lightningd

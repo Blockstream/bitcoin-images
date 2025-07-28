@@ -1,5 +1,5 @@
-ARG VER=latest
-FROM blockstream/lightningd:${VER}
+ARG CLN_VER=latest
+FROM blockstream/lightningd:${CLN_VER}
 
 # Install plugin dependencies
 RUN apt install -qfy jq autoconf automake build-essential git libtool libsqlite3-dev libffi-dev \

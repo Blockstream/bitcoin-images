@@ -1,3 +1,7 @@
+ARG BITCOIN_VER=27.0
+ARG ELEMENTS_VER=22.1.1
+FROM blockstream/bitcoind:${BITCOIN_VER} AS bitcoind
+FROM blockstream/elementsd:${ELEMENTS_VER} AS elementsd
 # https://github.com/docker-library/golang/blob/master/1.22/bullseye/Dockerfile
 FROM golang:1.22.11-bullseye AS builder
 
@@ -9,47 +13,12 @@ RUN apt-get install -y \
   python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext jq \
   && pip3 install --upgrade pip mako mrkd mistune==0.8.4 grpcio-tools
 
-# Download bitcoin binaries
-ENV WLADIMIRVDL_PGP_KEY=https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/laanwj.gpg
-ENV ACHOW_PGP_KEY=https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/achow101.gpg
-ENV BITCOIN_VERSION=26.1
-ENV BITCOIN_TARBALL=bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz
+# Get CLN
+ARG CLN_VER=v24.08.2
+ENV CLN_VER=$CLN_VER
+RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VER} /opt/lightningd
 
-# Get bitcoin
-RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/${BITCOIN_TARBALL} \
-  && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc \
-  && wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS
-
-RUN curl -s ${WLADIMIRVDL_PGP_KEY} | gpg --import \
-  && curl -s ${ACHOW_PGP_KEY} | gpg --import \
-  && csplit -ksz SHA256SUMS.asc  /-----BEGIN/ '{*}' \
-  && for i in xx*; do gpg --verify $i SHA256SUMS && break; done \
-  && grep ${BITCOIN_TARBALL} SHA256SUMS | sha256sum -c
-RUN mkdir /opt/bitcoin \
-  && tar xzvf ${BITCOIN_TARBALL} --strip-components=1 -C /opt/bitcoin \
-  && rm SHA256SUMS* ${BITCOIN_TARBALL}
-
-# Download elements binaries
-ENV ELEMENTS_VERSION=22.1.1
-ENV ELEMENTS_PGP_KEY="https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xbd0f3062f87842410b06a0432f656b0610604482"
-ENV ELEMENTS_TARBALL=elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz
-
-RUN wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/${ELEMENTS_TARBALL} \
- && wget https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/SHA256SUMS.asc
-
-RUN curl -s ${ELEMENTS_PGP_KEY} | gpg --import \
-  && gpg --verify SHA256SUMS.asc \
-  && grep ${ELEMENTS_TARBALL} SHA256SUMS.asc | sha256sum -c
-RUN mkdir /opt/elements \
-  && tar xzvf ${ELEMENTS_TARBALL} --strip-components=1 -C /opt/elements \
-  && rm SHA256SUMS* ${ELEMENTS_TARBALL}
-
-# Get c-lightning
-ARG CLN_VERSION=v24.08.2
-ENV CLN_VERSION=$CLN_VERSION
-RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VERSION} /opt/lightningd
-
-# Build c-lightning
+# Build CLN
 WORKDIR /opt/lightningd
 RUN git submodule update --init --recursive --depth 5
 RUN ./configure --prefix=/opt/lightning_install
@@ -58,19 +27,19 @@ RUN make install
 
 FROM golang:1.22.11-bullseye
 
-# C-Lightning deps
+# CLN deps
 RUN apt-get update
 RUN apt-get install -yq git bash autoconf automake build-essential libtool libgmp-dev libsqlite3-dev \
   python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext 
 
-# Copy binaries from builder
+# Copy CLN binaries from builder, bitcoind/elementsd from respective images
 COPY --from=builder /opt/lightning_install /usr/local
-COPY --from=builder /opt/bitcoin/bin/* /usr/local/bin/
-COPY --from=builder /opt/bitcoin/lib/* /usr/local/lib/
-COPY --from=builder /opt/bitcoin/share/* /usr/local/share/
-COPY --from=builder /opt/elements/bin/* /usr/local/bin/
-COPY --from=builder /opt/elements/lib/* /usr/local/lib/
-COPY --from=builder /opt/elements/share/* /usr/local/share/
+COPY --from=bitcoind /usr/local/bin/* /usr/local/bin/
+COPY --from=bitcoind /usr/local/lib/* /usr/local/lib/
+COPY --from=bitcoind /usr/local/share/* /usr/local/share/
+COPY --from=elementsd /usr/local/bin/* /usr/local/bin/
+COPY --from=elementsd /usr/local/lib/* /usr/local/lib/
+COPY --from=elementsd /usr/local/share/* /usr/local/share/
 
 # Install plugin dependencies
 ARG PLUGIN_PATH=/opt/plugins
@@ -98,14 +67,14 @@ RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
 
 # Add peerswap
-ARG PEERSWAP_COMMIT=5935fb4656307a87cafde2513d54deec1c26f8f2
-ENV PEERSWAP_COMMIT=$PEERSWAP_COMMIT
+ARG PEERSWAP_VER=5935fb4656307a87cafde2513d54deec1c26f8f2
+ENV PEERSWAP_VER=${PEERSWAP_VER}
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \
   # allows to fetch PRs
   && git config --local --add remote.origin.fetch '+refs/pull/*/head:refs/remotes/origin/pr/*' \
   && git fetch \
-  && git checkout $PEERSWAP_COMMIT \
+  && git checkout ${PEERSWAP_VER} \
   && make cln-release
 
 ENTRYPOINT ["lightningd"]
