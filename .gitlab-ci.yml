@@ -62,9 +62,9 @@ build_lightningd_historian:
   when: manual
   only:
     changes:
-      - lightningd/misc/historian/*
+      - lightningd/historian/*
   script:
-    - cd lightningd/misc/historian && sh ./build-and-push-to-dockerhub.sh
+    - cd lightningd/historian && sh ./build-and-push-to-dockerhub.sh
 
 build_elementsd:
   stage: build_push
