@@ -6,7 +6,7 @@ ARG CLN_VER=v24.08.2
 ENV CLN_VER=${CLN_VER}
 RUN apt update \
   && apt install -qfy jq autoconf automake build-essential git libtool libsqlite3-dev libffi-dev \
-                       python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext protobuf-compiler
+                       python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext protobuf-compiler libpq-dev
 RUN pip3 install mako --break-system-packages \
  && pip3 install grpcio-tools --break-system-packages
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
@@ -26,7 +26,7 @@ FROM debian:bookworm-slim
 # CLN deps
 RUN apt update \
  && apt install -qfy jq libtool libsqlite3-dev libffi-dev \
-  python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext wget
+  python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext wget libpq-dev
 
 # Install plugin dependencies (Prom's managed inline with uv)
 ARG PLUGIN_PATH=/opt/plugins

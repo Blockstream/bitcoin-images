@@ -3,8 +3,8 @@ FROM blockstream/lightningd:${CLN_VER}
 
 # Install plugin dependencies
 RUN apt install -qfy jq autoconf automake build-essential git libtool libsqlite3-dev libffi-dev \
-    python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext wget unzip pkg-config
-RUN pip3 install poetry --break-system-packages
+    python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext wget unzip pkg-config libpq-dev
+RUN pip3 install --break-system-packages poetry psycopg2
 
 ENV PLUGIN_PATH=/opt/plugins
 
@@ -17,8 +17,11 @@ RUN mkdir -p $PLUGIN_PATH/historian/cli \
   && rm master.zip \
   && chmod -x $PLUGIN_PATH/historian/historian-cli ## we do not want CLN to think this is a plugin at startup
 
+# Sometimes the historian plugin is behind the main image's python package versions so we need to downgrade
+## Disabling poetry's venvs and PIP_BREAK_SYSTEM_PACKAGES=1 allow for that
 RUN cd $PLUGIN_PATH/historian \
-  && poetry install
+    && poetry config virtualenvs.create false \
+    && PIP_BREAK_SYSTEM_PACKAGES=1 poetry install --no-root --only main
 
 RUN apt remove -qfy wget unzip jq autoconf automake build-essential git
 RUN apt clean && apt autoclean \
