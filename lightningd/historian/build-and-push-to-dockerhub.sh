@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -ex
 
 export CLN_VER=${CLN_VER:-v24.08.2}

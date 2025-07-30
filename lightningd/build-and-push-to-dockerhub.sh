@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -ex
 
 export CLN_VER=${CLN_VER:-v24.08.2}
@@ -13,7 +13,7 @@ docker buildx build \
   --build-arg BITCOIN_VER=${BITCOIN_VER} \
   -t blockstream/lightningd:${CLN_VER} . || { echo -e "\nSomething broke"; exit 1; }
 
-if [[ $LATEST -eq 1 ]]
+if [[ ${LATEST} -eq 1 ]]
 then
   docker buildx imagetools create -t blockstream/lightningd:latest blockstream/lightningd:${CLN_VER}
 fi

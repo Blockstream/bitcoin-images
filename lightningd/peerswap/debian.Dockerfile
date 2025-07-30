@@ -41,26 +41,25 @@ COPY --from=elementsd /usr/local/bin/* /usr/local/bin/
 COPY --from=elementsd /usr/local/lib/* /usr/local/lib/
 COPY --from=elementsd /usr/local/share/* /usr/local/share/
 
-# Install plugin dependencies
+# Install plugin dependencies (Prom's managed inline with uv)
 ARG PLUGIN_PATH=/opt/plugins
-ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/3fc4ece1ba42bf69b4f8ab6f5683decada0502b2
+ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
 
 RUN apt-get update
 RUN apt-get install -yq wget make gcc libffi-dev python3-dev python3-gdbm
-RUN pip3 install --upgrade pip wheel
+RUN pip3 install --upgrade pip wheel uv
 # Not installing paytest's deps since they should be covered by other packages'
 ## and its pyln-client/proto version requirement was a bit too old (0.9.2 up to 0.10.0)
 RUN pip3 install -r $RAW_GH_PLUGINS/rebalance/requirements.txt \
                  -r $RAW_GH_PLUGINS/summary/requirements.txt \
-                 prometheus-client==0.6.0 \
                  pyln-bolt7 \
                  pyln-proto
 
 # Add custom plugins (rebalance, summary, prometheus, paytest)
-RUN mkdir -p $PLUGIN_PATH \  
+RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/rebalance.py $RAW_GH_PLUGINS/rebalance/rebalance.py \
   && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
-  && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/archived/prometheus/prometheus.py \
+  && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/prometheus/prometheus.py \
   && wget -q -O $PLUGIN_PATH/paytest.py $RAW_GH_PLUGINS/archived/paytest/paytest.py \
   && chmod a+x $PLUGIN_PATH/* \
   && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py \

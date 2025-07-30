@@ -20,35 +20,33 @@ RUN ./configure --prefix=/opt/lightning_install
 RUN make -j$(nproc)
 RUN make install
 
-# Install plugin dependencies
-ARG PLUGIN_PATH=/opt/plugins
-ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
-RUN pip3 install --upgrade pip wheel --break-system-packages
-RUN pip3 install -r $RAW_GH_PLUGINS/summary/requirements.txt \
-  prometheus-client==0.6.0 --break-system-packages
-
-# Add custom plugins (prometheus, summary)
-RUN apt install -qfy wget
-RUN mkdir -p $PLUGIN_PATH
-RUN wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/archived/prometheus/prometheus.py
-RUN wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py
-RUN chmod a+x $PLUGIN_PATH/*
-RUN wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
-
 # Final image
 FROM debian:bookworm-slim
 
 # CLN deps
 RUN apt update \
  && apt install -qfy jq libtool libsqlite3-dev libffi-dev \
-  python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext
+  python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext wget
+
+# Install plugin dependencies (Prom's managed inline with uv)
+ARG PLUGIN_PATH=/opt/plugins
+ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
+RUN mkdir -p ${PLUGIN_PATH}
+
+RUN pip3 install --break-system-packages --upgrade pip wheel uv
+RUN pip3 install --break-system-packages -r $RAW_GH_PLUGINS/summary/requirements.txt
+
+# Add custom plugins (prometheus, summary)
+RUN wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/prometheus/prometheus.py
+RUN wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py
+RUN chmod a+x $PLUGIN_PATH/*
+RUN wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
 
 # Copy binaries from builder
 COPY --from=builder /opt/lightning_install /usr/local
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
 COPY --from=builder /usr/local/lib/* /usr/local/lib/
 COPY --from=builder /usr/local/share/* /usr/local/share/
-COPY --from=builder /opt/plugins /opt/plugins
 
 RUN apt clean && apt autoclean
 
