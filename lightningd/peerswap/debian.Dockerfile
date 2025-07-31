@@ -1,5 +1,5 @@
-ARG BITCOIN_VER=27.0
-ARG ELEMENTS_VER=22.1.1
+ARG BITCOIN_VER=27.2
+ARG ELEMENTS_VER=23.3.0
 FROM blockstream/bitcoind:${BITCOIN_VER} AS bitcoind
 FROM blockstream/elementsd:${ELEMENTS_VER} AS elementsd
 # https://github.com/docker-library/golang/blob/master/1.22/bullseye/Dockerfile
@@ -14,7 +14,7 @@ RUN apt-get install -y \
   && pip3 install --upgrade pip mako mrkd mistune==0.8.4 grpcio-tools
 
 # Get CLN
-ARG CLN_VER=v24.08.2
+ARG CLN_VER=v25.05
 ENV CLN_VER=$CLN_VER
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VER} /opt/lightningd
 
@@ -66,7 +66,7 @@ RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
 
 # Add peerswap
-ARG PEERSWAP_VER=5935fb4656307a87cafde2513d54deec1c26f8f2
+ARG PEERSWAP_VER=v5.0.0
 ENV PEERSWAP_VER=${PEERSWAP_VER}
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
-export CLN_VER=${CLN_VER:-v24.08.2}
-export BITCOIN_VER=${BITCOIN_VER:-27.0}
+export CLN_VER=${CLN_VER:-v25.05}
+export BITCOIN_VER=${BITCOIN_VER:-27.2}
 
 # Skipping ARM, segmentation faults.
 docker buildx build \

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -ex
 
-export CLN_VER=${CLN_VER:-v24.08.2}
-export PS_VER=${PS_VER:-3eadb6}
-export BITCOIN_VER=${BITCOIN_VER:-27.0}
-export ELEMENTS_VER=${ELEMENTS_VER:-22.1.1}
+export CLN_VER=${CLN_VER:-v25.05}
+export PS_VER=${PS_VER:-v5.0.0}
+export BITCOIN_VER=${BITCOIN_VER:-27.2}
+export ELEMENTS_VER=${ELEMENTS_VER:-23.3.0}
 
 export IMAGE=blockstream/lightningd
 export DOCKERFILE=debian.Dockerfile

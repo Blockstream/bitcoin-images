@@ -1,8 +1,8 @@
-ARG BITCOIN_VER=27.0
+ARG BITCOIN_VER=27.2
 FROM blockstream/bitcoind:${BITCOIN_VER} AS builder
 
 # Get CLN
-ARG CLN_VER=v24.08.2
+ARG CLN_VER=v25.05
 ENV CLN_VER=${CLN_VER}
 RUN apt update \
   && apt install -qfy jq autoconf automake build-essential git libtool libsqlite3-dev libffi-dev \

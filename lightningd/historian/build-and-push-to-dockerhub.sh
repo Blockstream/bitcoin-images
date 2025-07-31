@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-export CLN_VER=${CLN_VER:-v24.08.2}
+export CLN_VER=${CLN_VER:-v25.05}
 
 docker buildx build \
     --platform linux/amd64 \
