@@ -1,16 +1,22 @@
-FROM debian:bookworm-slim
+FROM rust:1.81.0 as builder
+RUN apt-get update && apt-get install -y clang git
 
-ARG WATERFALLS_VERSION
-ENV WATERFALLS_VERSION=$WATERFALLS_VERSION
+ARG WATERFALLS_REPO=https://github.com/RCasatta/waterfalls
+ENV WATERFALLS_REPO=$WATERFALLS_REPO
+ARG WATERFALLS_COMMIT_HASH=master
+ENV WATERFALLS_COMMIT_HASH=$WATERFALLS_COMMIT_HASH
 
-RUN apt update
-RUN apt install -qfy curl
+WORKDIR /
+RUN git clone --no-checkout $WATERFALLS_REPO \
+ && cd waterfalls \
+ && git checkout $WATERFALLS_COMMIT_HASH
+WORKDIR /waterfalls
 
-RUN curl -Ls https://github.com/LeoComandini/waterfalls/releases/download/${WATERFALLS_VERSION}/waterfalls_${WATERFALLS_VERSION}.gz | gunzip > waterfalls
-RUN chmod +x waterfalls
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    cargo build --release
 
-RUN apt remove -yf curl
-RUN apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-ENTRYPOINT ["./waterfalls"]
+FROM debian:stable-slim
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /waterfalls/target/release/waterfalls /usr/local/bin/waterfalls
+ENTRYPOINT [ "waterfalls" ]
