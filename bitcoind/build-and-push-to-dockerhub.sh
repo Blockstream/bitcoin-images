@@ -1,7 +1,7 @@
 #!/bin/sh
 set -ex
 
-export VER=${VER:-28.1}
+export VER=${VER:-28.2}
 docker buildx build --platform linux/amd64,linux/arm64 \
   --push \
   --cache-from blockstream/bitcoind:latest \
