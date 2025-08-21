@@ -35,8 +35,8 @@ RUN mkdir -p bitcoin /root/.bitcoin \
     tar xzvf bitcoin-${BITCOIN_VERSION}-x86_64-linux-gnu.tar.gz --strip-components=1 -C bitcoin; \
   fi \
 	&& mv bitcoin/bin/* /usr/local/bin/ \
-  && mv bitcoin/lib/* /usr/local/lib/ \
-  && mv bitcoin/include/* /usr/local/include/ \
+  && mv bitcoin/lib/* /usr/local/lib/ || true \
+  && mv bitcoin/include/* /usr/local/include/ || true \
   && mv bitcoin/share/* /usr/local/share/
 
 RUN apt clean && apt autoclean
