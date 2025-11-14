@@ -2,7 +2,7 @@
 set -ex
 
 export WATERFALLS_REPO=https://github.com/RCasatta/waterfalls
-export WATERFALLS_COMMIT_HASH=4abb0d99e7c26d4c1b06d69fa4c574475a46ffbd
+export WATERFALLS_COMMIT_HASH=b8818e1bf21f89e1d64b5077fc35c1b6ff26f37e
 
 docker buildx build \
     --platform linux/amd64,linux/arm64 \
