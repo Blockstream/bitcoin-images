@@ -3,9 +3,7 @@ FROM elementsproject/lightningd:${VER}
 
 # Install Python and required system dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 python3-pip python3-venv wget && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
+    apt-get install -y --no-install-recommends python3 python3-pip python3-venv wget
 # Prepare plugin directory
 ARG PLUGIN_PATH=/opt/plugins
 ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
@@ -22,5 +20,5 @@ RUN wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py
 RUN wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
 RUN chmod a+x $PLUGIN_PATH/*
 
-# Cleanup (optional)
+# Final cleanup: remove temporary files to reduce image size
 RUN rm -rf /var/lib/apt/lists/* /tmp/requirements.txt
