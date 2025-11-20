@@ -11,14 +11,16 @@ RUN mkdir -p ${PLUGIN_PATH}
 
 # Install plugin Python dependencies
 RUN pip3 install --break-system-packages --upgrade pip wheel uv
-RUN wget -q -O /tmp/requirements.txt $RAW_GH_PLUGINS/summary/requirements.txt && \
-    pip3 install --break-system-packages -r /tmp/requirements.txt
+RUN pip3 install --break-system-packages -r $RAW_GH_PLUGINS/summary/requirements.txt
 
+# Add custom plugins (prometheus, summary)
 # Download plugins
 RUN wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/prometheus/prometheus.py
 RUN wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py
-RUN wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
+# This chmod is intentionally set above summary_avail.py since this is not a plugin.
+# lightningd picks up everything that's an executable as a plugin.
 RUN chmod a+x $PLUGIN_PATH/*
+RUN wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py
 
 # Final cleanup: remove temporary files to reduce image size
 RUN rm -rf /var/lib/apt/lists/* /tmp/requirements.txt
