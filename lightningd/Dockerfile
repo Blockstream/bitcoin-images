@@ -1,4 +1,4 @@
-ARG VER=latest
+ARG VER=stable
 FROM elementsproject/lightningd:${VER}
 
 # Install Python and required system dependencies
