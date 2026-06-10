@@ -1,7 +1,6 @@
-# Dockerfile.gitian is kept as a compatibility alias for older commands.
-# Bitcoin Core 31.0 uses Guix for reproducible builds; prefer Dockerfile.guix.
-
 FROM debian:bookworm-slim
+
+# Packages a Bitcoin Core tree produced by ./run-guix.sh.
 
 RUN apt-get update \
   && apt-get install -qfy --no-install-recommends ca-certificates \
