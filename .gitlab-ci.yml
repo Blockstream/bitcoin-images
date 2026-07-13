@@ -92,3 +92,12 @@ build_electrsd:
       - electrsd/**
   script:
     - cd electrsd && sh ./build-and-push-to-dockerhub.sh
+
+build_tor:
+  stage: build_push
+  when: manual
+  only:
+    changes:
+      - tor/**
+  script:
+    - cd tor && sh ./build-and-push-to-dockerhub.sh

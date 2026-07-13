@@ -7,7 +7,7 @@ After=docker.service
 [Service]
 Restart=always
 RestartSec=1
-ExecStartPre=/usr/bin/docker pull blockstream/tor:latest
+ExecStartPre=/usr/bin/docker pull blockstream/tor:0.4.9.11@sha256:6bd720732b50928e9d97f64f3ccf8dd069cf0d3827a037fcb634667b89f0d563
 ExecStartPre=-/bin/chown -R 2000:2000 /mnt/data/tor
 ExecStartPre=-/bin/chmod -R 2700 /mnt/data/tor
 ExecStartPre=/sbin/iptables -A INPUT -m tcp -p tcp --dport 9050 -j ACCEPT
@@ -18,7 +18,7 @@ ExecStart=/usr/bin/docker run \
     --tmpfs /tmp/ \
     -v /mnt/data/torrc:/home/tor/torrc:ro \
     -v /mnt/data/tor:/home/tor/tor:rw \
-    blockstream/tor:latest tor -f /home/tor/torrc
+    blockstream/tor:0.4.9.11@sha256:6bd720732b50928e9d97f64f3ccf8dd069cf0d3827a037fcb634667b89f0d563 tor -f /home/tor/torrc
 ExecStop=/usr/bin/docker rm -f tor
 
 [Install]
