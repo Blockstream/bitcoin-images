@@ -12,6 +12,7 @@ default:
       command: ["dockerd", "--host=tcp://0.0.0.0:2375"]
       alias: "docker"
   before_script:
+    - echo "$DOCKERHUB_PW" | docker login -u $DOCKERHUB_USER --password-stdin
     - docker info
     - docker buildx create
       --driver=docker-container
