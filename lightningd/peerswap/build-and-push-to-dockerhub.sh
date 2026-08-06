@@ -2,15 +2,13 @@
 set -ex
 
 export CLN_VER=${CLN_VER:-v25.05}
-export PS_VER=${PS_VER:-v5.0.0}
-export BITCOIN_VER=${BITCOIN_VER:-27.2}
-export ELEMENTS_VER=${ELEMENTS_VER:-23.3.0}
+export PS_VER=${PS_VER:-v5.0.1}
+export BITCOIN_VER=${BITCOIN_VER:-31.1}
+export ELEMENTS_VER=${ELEMENTS_VER:-23.3.3}
 
 export IMAGE=blockstream/lightningd
-export DOCKERFILE=debian.Dockerfile
+export DOCKERFILE=Dockerfile
 export FLAVOR=${IMAGE}:${CLN_VER}-peerswap-debian
-# export DOCKERFILE=Dockerfile
-# export FLAVOR=${IMAGE}:${CLN_VER}-peerswap
 
 # --platform linux/amd64,arm64 \
 docker buildx build \

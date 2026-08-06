@@ -1,57 +1,83 @@
-ARG CLN_VER=v25.05
-ARG ELEMENTS_VER=23.3.0
-FROM blockstream/lightningd:${CLN_VER} as cln
+ARG BITCOIN_VER=31.1
+ARG ELEMENTS_VER=23.3.3
+ARG UV_VERSION=0.12.0
+FROM blockstream/bitcoind:${BITCOIN_VER} AS bitcoind
 FROM blockstream/elementsd:${ELEMENTS_VER} AS elementsd
-FROM golang:1.20-alpine3.18
+FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
+# https://github.com/docker-library/golang/blob/master/1.22/bookworm/Dockerfile
+FROM golang:1.22.11-bookworm AS builder
 
-RUN apk add --no-cache --upgrade curl gnupg
+COPY --from=uv /uv /uvx /bin/
+
+WORKDIR /opt
+
+RUN apt-get update
+RUN apt-get install -y \
+  autoconf automake build-essential git libtool libgmp-dev libsqlite3-dev \
+  python3 net-tools zlib1g-dev libsodium-dev gettext jq \
+  && uv pip install --system --break-system-packages \
+    mako mrkd mistune==0.8.4 grpcio-tools
+
+# Get CLN
+ARG CLN_VER=v25.05
+ENV CLN_VER=$CLN_VER
+RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VER} /opt/lightningd
+
+# Build CLN
+WORKDIR /opt/lightningd
+RUN git submodule update --init --recursive --depth 5
+RUN ./configure --prefix=/opt/lightning_install
+RUN make -j 32 || sleep 9999
+RUN make install
+
+FROM golang:1.22.11-bookworm
+
+COPY --from=uv /uv /uvx /bin/
+ENV UV_CACHE_DIR=/opt/uv-cache
+ENV UV_PYTHON_DOWNLOADS=never
 
 # CLN deps
-RUN apk add --no-cache ca-certificates gmp libgcc libsodium sqlite-libs zlib \
-  inotify-tools socat bash gnupg py3-pip postgresql-libs
+RUN apt-get update
+RUN apt-get install -yq git bash autoconf automake build-essential libtool libgmp-dev libsqlite3-dev \
+  python3 net-tools zlib1g-dev libsodium-dev gettext
 
-# Add GNU Lib C
-ENV GLIBC_VERSION=2.33-r0
-RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
- && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk \
- && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}.apk
-
-RUN apk update \
-  # context for --force-overwrite https://github.com/sgerrand/alpine-pkg-glibc/issues/185
-  && apk --no-cache add --force-overwrite glibc-${GLIBC_VERSION}.apk glibc-bin-${GLIBC_VERSION}.apk \
-  && rm -f glibc-*
-
-# Copy CLN and Bitcoin binaries from cln + Elements from elementsd
-COPY --from=cln /usr/local/bin/* /usr/local/bin/
-COPY --from=cln /usr/local/libexec /usr/local/libexec/
-COPY --from=cln /usr/local/lib/libbitcoinconsensus* /usr/local/lib/
-COPY --from=cln /usr/local/share/man1/bitcoin* /usr/local/share/man1/
+# Copy CLN binaries from builder, bitcoind/elementsd from respective images
+COPY --from=builder /opt/lightning_install /usr/local
+COPY --from=bitcoind /usr/local/bin/* /usr/local/bin/
+COPY --from=bitcoind /usr/local/lib/* /usr/local/lib/
+COPY --from=bitcoind /usr/local/share/* /usr/local/share/
 COPY --from=elementsd /usr/local/bin/* /usr/local/bin/
 COPY --from=elementsd /usr/local/lib/* /usr/local/lib/
 COPY --from=elementsd /usr/local/share/* /usr/local/share/
 
-# Install plugin dependencies (Prom's managed inline with uv)
+# Install plugin dependencies (rebalance, summary, and Prometheus use inline uv metadata)
 ARG PLUGIN_PATH=/opt/plugins
-ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/master
+ARG RAW_GH_PLUGINS=https://raw.githubusercontent.com/lightningd/plugins/c0b768f3ed3c88d5119442299f159267b5fc09ba
 
-RUN apk add --no-cache --virtual deps wget git make gcc musl-dev libffi-dev python3-dev
-RUN pip3 install --upgrade pip wheel uv
-RUN pip3 install -r $RAW_GH_PLUGINS/rebalance/requirements.txt \
-                 -r $RAW_GH_PLUGINS/summary/requirements.txt \
-                 pyln-bolt7 \
-                 pyln-proto
+RUN apt-get update
+RUN apt-get install -yq wget make gcc libffi-dev python3-dev python3-gdbm
+# Paytest is archived and has no inline uv metadata; match its pyln packages to CLN.
+RUN uv pip install --system --break-system-packages \
+  pyln-client==25.5 pyln-proto==25.5 pyln-bolt7
 
-# Add custom plugins (rebalance, summary, prometheus)
-RUN mkdir -p $PLUGIN_PATH \  
+# Add custom plugins (rebalance, summary, prometheus, paytest)
+RUN mkdir -p $PLUGIN_PATH \
   && wget -q -O $PLUGIN_PATH/rebalance.py $RAW_GH_PLUGINS/rebalance/rebalance.py \
   && wget -q -O $PLUGIN_PATH/summary.py $RAW_GH_PLUGINS/summary/summary.py \
   && wget -q -O $PLUGIN_PATH/prometheus.py $RAW_GH_PLUGINS/prometheus/prometheus.py \
+  && wget -q -O $PLUGIN_PATH/paytest.py $RAW_GH_PLUGINS/archived/paytest/paytest.py \
   && chmod a+x $PLUGIN_PATH/* \
   && wget -q -O $PLUGIN_PATH/summary_avail.py $RAW_GH_PLUGINS/summary/summary_avail.py \
-  && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py
+  && wget -q -O $PLUGIN_PATH/clnutils.py $RAW_GH_PLUGINS/rebalance/clnutils.py \
+  && uv lock --script $PLUGIN_PATH/rebalance.py \
+  && uv lock --script $PLUGIN_PATH/summary.py \
+  && uv lock --script $PLUGIN_PATH/prometheus.py \
+  && uv run --script $PLUGIN_PATH/rebalance.py </dev/null \
+  && uv run --script $PLUGIN_PATH/summary.py </dev/null \
+  && uv run --script $PLUGIN_PATH/prometheus.py </dev/null
 
 # Add peerswap
-ARG PEERSWAP_VER=v5.0.0
+ARG PEERSWAP_VER=v5.0.1
 ENV PEERSWAP_VER=${PEERSWAP_VER}
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \
@@ -60,8 +86,6 @@ RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps
   && git fetch \
   && git checkout ${PEERSWAP_VER} \
   && make cln-release
-  
-RUN apk --purge del deps
 
 ENTRYPOINT ["lightningd"]
 CMD ["--help"]
