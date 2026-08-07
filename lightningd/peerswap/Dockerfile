@@ -13,21 +13,21 @@ WORKDIR /opt
 
 RUN apt-get update
 RUN apt-get install -y \
-  autoconf automake build-essential git libtool libgmp-dev libsqlite3-dev \
-  python3 net-tools zlib1g-dev libsodium-dev gettext jq \
+  autoconf automake build-essential git libtool libgmp-dev libsqlite3-dev libssl-dev \
+  python3 net-tools zlib1g-dev libsodium-dev gettext jq lowdown \
   && uv pip install --system --break-system-packages \
     mako mrkd mistune==0.8.4 grpcio-tools
 
 # Get CLN
-ARG CLN_VER=v25.05
+ARG CLN_VER=v25.12.1
 ENV CLN_VER=$CLN_VER
-RUN git clone https://github.com/ElementsProject/lightning.git --depth 5 -b ${CLN_VER} /opt/lightningd
+RUN git clone https://github.com/ElementsProject/lightning.git --depth 1 -b ${CLN_VER} /opt/lightningd
 
 # Build CLN
 WORKDIR /opt/lightningd
-RUN git submodule update --init --recursive --depth 5
+RUN git submodule update --init --recursive --depth 1
 RUN ./configure --prefix=/opt/lightning_install
-RUN make -j 32 || sleep 9999
+RUN make -j "$(nproc)"
 RUN make install
 
 FROM golang:1.22.11-bookworm

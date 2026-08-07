@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-export VER=${VER:-v25.09.3}
+export VER=${VER:-v25.12.1}
 
 # Skipping ARM, segmentation faults.
 docker buildx build \

@@ -58,15 +58,6 @@ build_lightningd_peerswap:
   script:
     - cd lightningd/peerswap && sh ./build-and-push-to-dockerhub.sh
 
-build_lightningd_historian:
-  stage: build_push
-  when: manual
-  only:
-    changes:
-      - lightningd/historian/*
-  script:
-    - cd lightningd/historian && sh ./build-and-push-to-dockerhub.sh
-
 build_elementsd:
   stage: build_push
   when: manual

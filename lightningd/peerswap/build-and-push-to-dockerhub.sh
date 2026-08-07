@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-export CLN_VER=${CLN_VER:-v25.05}
+export CLN_VER=${CLN_VER:-v25.12.1}
 export PS_VER=${PS_VER:-v5.0.1}
 export BITCOIN_VER=${BITCOIN_VER:-31.1}
 export ELEMENTS_VER=${ELEMENTS_VER:-23.3.3}
