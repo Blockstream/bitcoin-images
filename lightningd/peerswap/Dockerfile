@@ -1,9 +1,14 @@
 ARG BITCOIN_VER=31.1
 ARG ELEMENTS_VER=23.3.3
 ARG UV_VERSION=0.12.0
+ARG CLN_VER=v25.12.1
+ARG CLN_UPSTREAM_DIGEST=sha256:618eed33ba923cc459164bba38e8c554f97113f730a2f96e8423b18c0c515d9d
 FROM blockstream/bitcoind:${BITCOIN_VER} AS bitcoind
 FROM blockstream/elementsd:${ELEMENTS_VER} AS elementsd
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
+FROM elementsproject/lightningd:${CLN_VER}@${CLN_UPSTREAM_DIGEST} AS cln_upstream
+ARG CLN_VER
+RUN test "$(/usr/local/bin/lightningd --version)" = "${CLN_VER}"
 # https://github.com/docker-library/golang/blob/master/1.22/bookworm/Dockerfile
 FROM golang:1.22.11-bookworm AS builder
 
@@ -19,7 +24,7 @@ RUN apt-get install -y \
     mako mrkd mistune==0.8.4 grpcio-tools
 
 # Get CLN
-ARG CLN_VER=v25.12.1
+ARG CLN_VER
 ENV CLN_VER=$CLN_VER
 RUN git clone https://github.com/ElementsProject/lightning.git --depth 1 -b ${CLN_VER} /opt/lightningd
 
@@ -86,6 +91,12 @@ RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps
   && git fetch \
   && git checkout ${PEERSWAP_VER} \
   && make cln-release
+
+# CLNRest is a Rust plugin and is absent from this image's local CLN build.
+# Install the matching upstream binary in the configured custom plugin directory.
+COPY --from=cln_upstream --chmod=0755 \
+  /usr/local/libexec/c-lightning/plugins/clnrest \
+  /opt/plugins/clnrest
 
 ENTRYPOINT ["lightningd"]
 CMD ["--help"]
