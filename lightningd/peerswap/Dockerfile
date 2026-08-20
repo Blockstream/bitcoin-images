@@ -1,8 +1,8 @@
 ARG BITCOIN_VER=31.1
 ARG ELEMENTS_VER=23.3.3
 ARG UV_VERSION=0.12.0
-ARG CLN_VER=v25.12.1
-ARG CLN_UPSTREAM_DIGEST=sha256:618eed33ba923cc459164bba38e8c554f97113f730a2f96e8423b18c0c515d9d
+ARG CLN_VER=v26.06.6
+ARG CLN_UPSTREAM_DIGEST=sha256:f8f1ec25ea6dfbc9fab1e3dd918e15f7c4a3f5bb97b87bb6490d4c8a7c71ee6b
 FROM blockstream/bitcoind:${BITCOIN_VER} AS bitcoind
 FROM blockstream/elementsd:${ELEMENTS_VER} AS elementsd
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
@@ -82,7 +82,7 @@ RUN mkdir -p $PLUGIN_PATH \
   && uv run --script $PLUGIN_PATH/prometheus.py </dev/null
 
 # Add peerswap
-ARG PEERSWAP_VER=v5.0.1
+ARG PEERSWAP_VER=v7.0.0
 ENV PEERSWAP_VER=${PEERSWAP_VER}
 RUN git clone https://github.com/ElementsProject/peerswap.git -n $PLUGIN_PATH/ps \
   && cd $PLUGIN_PATH/ps \

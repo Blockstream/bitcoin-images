@@ -46,6 +46,7 @@ build_lightningd:
   only:
     changes:
       - lightningd/Dockerfile
+      - lightningd/build-and-push-to-dockerhub.sh
   script:
     - cd lightningd && sh ./build-and-push-to-dockerhub.sh
 
