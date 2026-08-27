@@ -1,5 +1,5 @@
 # Dockerfile.gitian is kept as a compatibility alias for older commands.
-# Bitcoin Core 31.0 uses Guix for reproducible builds; prefer Dockerfile.guix.
+# Bitcoin Core 31.1 uses Guix for reproducible builds; prefer Dockerfile.guix.
 
 FROM debian:bookworm-slim
 
