@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -ex
 
-export CLN_VER="${CLN_VER:-v26.06.8}"
+export CLN_VER="${CLN_VER:-v26.06.9}"
 export PS_VER="${PS_VER:-v7.0.0}"
 export BITCOIN_VER="${BITCOIN_VER:-31.1}"
 export ELEMENTS_VER="${ELEMENTS_VER:-23.3.3}"
 export GO_VERSION="${GO_VERSION:-1.26.7}"
 export RUST_VERSION="${RUST_VERSION:-1.98.0}"
 export UV_VERSION="${UV_VERSION:-0.12.0}"
-export PYLN_VERSION="${PYLN_VERSION:-26.6.6}"
+export PYLN_VERSION="${PYLN_VERSION:-26.6.9}"
 
 export IMAGE="blockstream/lightningd"
 export DOCKERFILE="Dockerfile"

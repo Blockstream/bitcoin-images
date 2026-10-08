@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-export VER=${VER:-v26.06.8}
+export VER=${VER:-v26.06.9}
 
 docker buildx build \
   --platform linux/amd64 \
